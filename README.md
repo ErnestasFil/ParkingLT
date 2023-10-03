@@ -51,4 +51,4 @@ Vairuotojas, norėdamas naudotis parkavimo sistema, nebūtinai turi prisiregistr
 
 Sistema bei visos sistemos dalys bus talpinamos „Azure“ serveryje. Internetinė aplikacija bus pasiekiama naudojantis „HTTPS“ protokolą. Siekiant užtikrinti sistemos veikimą, bus pasinaudota žemėlapių sistema „Mapbox“ API. Ši sistema turės veikti kartu su kliento puse (atvaizduoti žemėlapi) bei su serverio puse, kad būtų gaunami saugomi duomenys apie tam tikras zonas, bei papildomai nupiešiami ant žemėlapio. Žemiau matoma sistemos diegimo diagrama:
 
-![Kuriamos sistemos diegimo diagrama](https://i.ibb.co/vQymVf4/Picture1.png)
+![Kuriamos sistemos diegimo diagrama](https://i.ibb.co/pKVQzTb/Screenshot-64.png)
