@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('payment', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('fk_Userid')->index('make');
-            $table->dateTime('date');
-            $table->double('amount');
-            $table->integer('status')->index('status');
+        Schema::create('parking_report_photo', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Parking_reportid')->index('has_parking_rPhoto');
+            $table->string('photo');
         });
     }
 
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('payment');
+        Schema::dropIfExists('parking_report_photo');
     }
 };

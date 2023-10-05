@@ -13,14 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('privilege', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->double('discount');
-            $table->boolean('confirmed')->default(false);
+        Schema::create('reservation', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Userid')->index('has_reservation');
+            $table->integer('fk_Parking_spaceid')->index('is_reserved');
+            $table->integer('fk_Privilegeid')->nullable()->index('has_discount');
             $table->dateTime('date_from');
             $table->dateTime('date_until');
-            $table->integer('fk_Userid')->index('have_privilege');
-            $table->integer('fk_Adminid')->nullable()->index('confirm_privilege');
+            $table->double('price');
         });
     }
 
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('privilege');
+        Schema::dropIfExists('reservation');
     }
 };

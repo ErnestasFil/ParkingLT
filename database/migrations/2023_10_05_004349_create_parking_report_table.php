@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('parking_report', function (Blueprint $table) {
-            $table->integer('id')->primary();
+            $table->integer('id', true);
             $table->integer('fk_Carid')->index('is_added');
             $table->integer('fk_Adminid')->index('create_parking_report');
             $table->integer('fk_Parking_spaceid')->index('has_parking_info');

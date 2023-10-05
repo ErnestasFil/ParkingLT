@@ -13,9 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('fuel', function (Blueprint $table) {
-            $table->integer('id_Fuel')->primary();
-            $table->char('name', 12);
+        Schema::create('payment', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Userid')->index('make');
+            $table->dateTime('date');
+            $table->double('amount');
+            $table->integer('status')->index('status');
         });
     }
 
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('fuel');
+        Schema::dropIfExists('payment');
     }
 };

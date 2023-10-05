@@ -14,10 +14,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('parking_space', function (Blueprint $table) {
-            $table->integer('id')->primary();
+            $table->integer('id', true);
             $table->integer('fk_Parking_zoneid')->index('has_parking_space');
             $table->integer('space_number');
-            $table->multiPolygon('location_polygon');
+            $table->polygon('location_polygon');
             $table->boolean('invalid_place')->default(false);
             $table->string('street');
             $table->text('information');

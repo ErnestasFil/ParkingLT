@@ -13,12 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('report_ticket', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('fk_Userid')->index('create_report');
-            $table->dateTime('date');
-            $table->text('information');
-            $table->boolean('checked')->default(false);
+        Schema::create('fuel', function (Blueprint $table) {
+            $table->integer('id_Fuel', true);
+            $table->char('name', 12);
         });
     }
 
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('report_ticket');
+        Schema::dropIfExists('fuel');
     }
 };

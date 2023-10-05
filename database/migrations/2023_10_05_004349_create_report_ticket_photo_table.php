@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('privilege_documents', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('fk_Privilegeid')->index('has_document');
-            $table->string('document_path');
+        Schema::create('report_ticket_photo', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Report_ticketid')->index('has_report_photo');
+            $table->string('photo');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('privilege_documents');
+        Schema::dropIfExists('report_ticket_photo');
     }
 };

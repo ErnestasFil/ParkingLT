@@ -13,10 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('parking_report_photo', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('fk_Parking_reportid')->index('has_parking_rPhoto');
-            $table->string('photo');
+        Schema::create('role', function (Blueprint $table) {
+            $table->integer('id_Role', true);
+            $table->char('name', 13);
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('parking_report_photo');
+        Schema::dropIfExists('role');
     }
 };

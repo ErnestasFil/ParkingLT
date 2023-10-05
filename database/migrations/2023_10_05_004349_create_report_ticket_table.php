@@ -13,9 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('role', function (Blueprint $table) {
-            $table->integer('id_Role')->primary();
-            $table->char('name', 13);
+        Schema::create('report_ticket', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Userid')->index('create_report');
+            $table->dateTime('date');
+            $table->text('information');
+            $table->boolean('checked')->default(false);
         });
     }
 
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('role');
+        Schema::dropIfExists('report_ticket');
     }
 };

@@ -13,9 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('status', function (Blueprint $table) {
-            $table->integer('id_Status')->primary();
-            $table->char('name', 8);
+        Schema::create('privilege_documents', function (Blueprint $table) {
+            $table->integer('id', true);
+            $table->integer('fk_Privilegeid')->index('has_document');
+            $table->string('document_path');
         });
     }
 
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('status');
+        Schema::dropIfExists('privilege_documents');
     }
 };

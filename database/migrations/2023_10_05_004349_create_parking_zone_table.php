@@ -13,15 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user', function (Blueprint $table) {
-            $table->integer('id')->primary();
+        Schema::create('parking_zone', function (Blueprint $table) {
+            $table->integer('id', true);
             $table->string('name');
-            $table->string('surname');
-            $table->string('email');
-            $table->string('phone');
-            $table->text('password');
-            $table->double('balance');
-            $table->integer('role')->index('role');
+            $table->string('colour');
+            $table->integer('paying_time');
+            $table->double('price');
+            $table->polygon('location_polygon');
+            $table->text('information');
+            $table->string('city');
         });
     }
 
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user');
+        Schema::dropIfExists('parking_zone');
     }
 };
