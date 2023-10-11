@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ParkingZoneRequest;
 use App\Http\Resources\ParkingZoneResource;
 use App\Models\Parking_zone;
-use Illuminate\Http\Request;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;

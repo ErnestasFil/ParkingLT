@@ -28,4 +28,8 @@ class Parking_zone extends Model
     ];
     public $timestamps = false;
     public $incrementing = true;
+    public function ParkingSpace()
+    {
+        return $this->hasMany(Parking_space::class, 'fk_Parking_zoneid');
+    }
 }

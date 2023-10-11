@@ -23,4 +23,12 @@ class Reservation extends Model
     ];
     public $timestamps = false;
     public $incrementing = true;
+    public function ParkingSpace()
+    {
+        return $this->belongsTo(Parking_space::class, 'fk_Parking_spaceid');
+    }
+    public function Privilege()
+    {
+        return $this->belongsTo(Privilege::class, 'fk_Privilegeid');
+    }
 }

@@ -23,32 +23,27 @@ class ParkingZoneRequest extends FormRequest
         }
         $this->offsetUnset('_method');
         switch ($method) {
-            case 'DELETE':
-            case 'GET':
-                break;
             case 'POST':
                 $this->rules = [
-                    'name' => ['required', 'regex:/^[\p{L}\s]+$/u', 'min:3', 'max:40'],
+                    'name' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:40'],
                     'colour' => ['required', 'regex:/^#([a-fA-F0-9]{6})$/'],
                     'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
                     'price' => ['required', new ValidPriceRule],
                     'location_polygon' => ['required', new PolygonCheckRule],
-                    'information' => ['required', 'regex:/^[\p{L}\s\d.,!-]+$/u', 'min:10', 'max:200'],
-                    'city' => ['required', 'regex:/^[\p{L}\s]+$/u', 'min:3', 'max:30']
+                    'information' => ['required', 'regex:/^[\p{L} \p{N},!-]+$/u', 'min:10', 'max:200'],
+                    'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
                 ];
                 break;
             case 'PUT':
                 $this->rules = [
-                    'name' => ['required', 'regex:/^[\p{L}\s]+$/u', 'min:3', 'max:40'],
+                    'name' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:40'],
                     'colour' => ['required', 'regex:/^#([a-fA-F0-9]{6})$/'],
                     'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
                     'price' => ['required', new ValidPriceRule],
                     'location_polygon' => ['required', new PolygonCheckRule],
-                    'information' => ['required', 'regex:/^[\p{L}\s\d.,!-]+$/u', 'min:10', 'max:200'],
-                    'city' => ['required', 'regex:/^[\p{L}\s]+$/u', 'min:3', 'max:30']
+                    'information' => ['required', 'regex:/^[\p{L} \p{N}.,!-]+$/u', 'min:10', 'max:200'],
+                    'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
                 ];
-            case 'PATCH':
-                break;
             default:
                 break;
         }

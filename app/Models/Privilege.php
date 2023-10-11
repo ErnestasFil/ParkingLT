@@ -26,4 +26,8 @@ class Privilege extends Model
     ];
     public $timestamps = false;
     public $incrementing = true;
+    public function Reservation()
+    {
+        return $this->hasMany(Reservation::class, 'fk_Privilegeid');
+    }
 }
