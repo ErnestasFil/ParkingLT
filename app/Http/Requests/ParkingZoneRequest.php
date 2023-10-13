@@ -30,7 +30,7 @@ class ParkingZoneRequest extends FormRequest
                     'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
                     'price' => ['required', new ValidPriceRule],
                     'location_polygon' => ['required', new PolygonCheckRule],
-                    'information' => ['required', 'regex:/^[\p{L} \p{N},!-]+$/u', 'min:10', 'max:200'],
+                    'information' => ['required', 'regex:/^[\p{L} \p{N},!-.]+$/u', 'min:10', 'max:200'],
                     'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
                 ];
                 break;

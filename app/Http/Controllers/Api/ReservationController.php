@@ -48,8 +48,6 @@ class ReservationController extends Controller
     }
     public function update(Parking_zone $parking_zone, Parking_space $parking_space, Reservation $reservation, ReservationRequest $request)
     {
-        if ($parking_space->fk_Parking_zoneid != $parking_zone->id || $reservation->fk_Parking_spaceid != $parking_space->id)
-            return response(['message' => 'Duomenys nerasti'], 404);
         $price = ceil($request->time / $parking_zone->paying_time) * $parking_zone->price;
         if ($reservation->fk_Privilegeid != null) {
             $price -= $price * ($reservation->Privilege->discount / 100);

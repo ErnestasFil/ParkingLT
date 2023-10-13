@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Parking_space;
+use App\Models\Parking_zone;
 use App\Rules\PolygonCheckRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ParkingSpaceRequest extends FormRequest
 {
@@ -67,5 +70,23 @@ class ParkingSpaceRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json($validator->errors(), 422));
+    }
+    protected function prepareForValidation()
+    {
+        $method = $this->method();
+        if (null !== $this->get('_method', null)) {
+            $method = $this->get('_method');
+        }
+        $this->offsetUnset('_method');
+        if ($method == 'PUT') {
+            $parkingZoneId = $this->route('parking_zone')->id;
+            $parkingSpaceId = $this->route('parking_space')->id;
+
+            $parking_zone = Parking_zone::where('id', $parkingZoneId)->first();
+            $parking_space = Parking_space::where('id', $parkingSpaceId)->first();
+
+            if ($parking_space->fk_Parking_zoneid != $parking_zone->id)
+                throw new NotFoundHttpException(response(['message' => 'Duomenys nerasti'], 404));
+        }
     }
 }

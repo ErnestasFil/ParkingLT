@@ -9,7 +9,7 @@ class Reservation extends Model
 {
     use HasFactory;
     protected $primaryKey = 'id';
-    protected $table = 'Reservation';
+    protected $table = 'reservation';
     protected $fillable = [
         'fk_Userid',
         'fk_Parking_spaceid',

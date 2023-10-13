@@ -8,15 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class JsonFormat
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        json_decode($request->getContent());
-        if (json_last_error() != JSON_ERROR_NONE) {
+        try {
+            $data = $request->getContent();
+            if ($data)
+                json_decode($data, false, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
             return response(['message' => 'Blogas JSON formatas'], 400);
         }
         return $next($request);

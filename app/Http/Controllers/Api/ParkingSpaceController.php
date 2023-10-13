@@ -43,8 +43,6 @@ class ParkingSpaceController extends Controller
     }
     public function update(Parking_zone $parking_zone, Parking_space $parking_space, ParkingSpaceRequest $request)
     {
-        if ($parking_space->fk_Parking_zoneid != $parking_zone->id)
-            return response(['message' => 'Duomenys nerasti'], 404);
         $request->merge(["fk_Parking_zoneid" => $parking_zone->id]);
         $polygon = new Polygon([
             new LineString(array_map(function ($point) {

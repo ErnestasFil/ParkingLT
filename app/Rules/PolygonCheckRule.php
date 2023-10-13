@@ -20,6 +20,8 @@ class PolygonCheckRule implements ValidationRule
                 foreach ($value as $point) {
                     if (!is_array($point) || count($point) !== 2) {
                         $fail("Ploto taškas turi turėti 2 taškus!");
+                    } elseif (!is_numeric($point[0]) || !is_numeric($point[1])) {
+                        $fail("Ploto taškai turi būti skaičiai!");
                     } elseif ($point[0] < -180 || $point[0] > 180 || $point[1] < -90 || $point[1] > 90) {
                         $fail("Koordinačių ribos: ilgumos turi būti tarp -180 ir 180, platumos tarp -90 ir 90.");
                     }

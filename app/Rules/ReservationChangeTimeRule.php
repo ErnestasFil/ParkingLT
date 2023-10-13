@@ -16,7 +16,6 @@ class ReservationChangeTimeRule implements ValidationRule
     }
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        // dd($this->reservationId);
         $reservation = Reservation::find($this->reservationId);
         if (!$reservation) {
             $fail("Rezervacija nerasta!");
