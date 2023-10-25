@@ -162,11 +162,15 @@ return [
     |
     */
 
-    'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
-        ],
+
+    'password' => [
+        'mixed' => 'Slaptažodis turi būti sudarytas iš mažųjų ir didžiųjų raidžių.',
+        'letters' => 'Slaptažodis turi turėti raidžių.',
+        'symbols' => 'Slaptažodis turi turėti specialių simbolių.',
+        'numbers' => 'Slaptažodis turi turėti skaičių.',
+        'uncompromised' => 'Slaptažodis yra nepriimtinas dėl saugumo priežasčių.',
     ],
+
 
     /*
     |--------------------------------------------------------------------------

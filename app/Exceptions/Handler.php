@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Throwable;
@@ -52,6 +53,10 @@ class Handler extends ExceptionHandler
                     return response()->json([
                         'message' => "Duomenys nerasti",
                     ], 404);
+                } elseif ($e instanceof AuthenticationException) {
+                    return response()->json([
+                        'message' => "Vartotojas nerpisijungęs!",
+                    ], 401);
                 } elseif ($e instanceof MethodNotAllowedHttpException) {
                     return response()->json([
                         'message' => $e->getMessage(),

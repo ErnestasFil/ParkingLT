@@ -15,4 +15,8 @@ class Role extends Model
     ];
     public $timestamps = false;
     public $incrementing = true;
+    public function users()
+    {
+        return $this->hasMany(Role::class, 'id_Role');
+    }
 }

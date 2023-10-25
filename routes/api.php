@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ParkingSpaceController;
 use App\Http\Controllers\Api\ParkingZone;
 use App\Http\Controllers\Api\ParkingZoneController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,7 +25,6 @@ Route::prefix('V1')->group(function () {
     Route::post('/parking_zone', [ParkingZoneController::class, 'store'])->name('store')->middleware('jsonFormat');
     Route::put('/parking_zone/{parking_zone}', [ParkingZoneController::class, 'update'])->name('update')->middleware('jsonFormat');
     Route::delete('/parking_zone/{parking_zone}', [ParkingZoneController::class, 'destroy'])->name('destroy');
-
     Route::prefix('/parking_zone/{parking_zone}')->group(function () {
         Route::get('/parking_space', [ParkingSpaceController::class, 'index'])->name('index');
         Route::get('/parking_space/{parking_space}', [ParkingSpaceController::class, 'show'])->name('show');
@@ -39,4 +39,7 @@ Route::prefix('V1')->group(function () {
             Route::delete('/reservation/{reservation}', [ReservationController::class, 'destroy'])->name('destroy');
         });
     });
+    Route::post('/register', [UserController::class, 'register'])->name('register')->middleware('jsonFormat');
+    Route::post('/login', [UserController::class, 'login'])->name('login')->middleware('jsonFormat');
+    Route::get('/user', [UserController::class, 'index'])->name('index')->middleware('auth:api');
 });
