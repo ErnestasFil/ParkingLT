@@ -1,4 +1,4 @@
-# Parkavimo stistema „ParkingLT“
+# Parkavimo sistema „ParkingLT“
 ## Uždavinio aprašymas
 Projekto tikslas – palengvinti vairuotojams lengviau atrasti stovėjimo vietą tam tikroje miesto vietoje, taip sutrumpinant laiką ieškant laisvos vietos, kur gali palikti savo transporto priemonę.
 
