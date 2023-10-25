@@ -20,7 +20,8 @@ class UserRegisterRequest extends FormRequest
             'name' => ['required', 'alpha', 'min:3', 'max:25'],
             'surname' => ['required', 'alpha', 'min:5', 'max:40'],
             'email' => ['required', 'email', 'unique:user,email'],
-            'phone' => ['required', 'phone:LT,LV,EE', 'regex:/^\+[0-9]*$/'],
+            'phone' => ['required', 'phone', 'regex:/^\+[0-9]*$/'],
+            'phone_country' => ['required_with:phone', 'regex:/^[a-zA-Z]{2}$/'],
             'password' => [
                 'required', 'string', 'confirmed', Password::min(8)
                     ->mixedCase()
@@ -52,7 +53,8 @@ class UserRegisterRequest extends FormRequest
             'phone.required' => 'Telefono numerio laukelis privalomas!',
             'phone.phone' => 'Blogas telefono numerio formatas!',
             'phone.regex' => 'Telefono numeris turi prasidėti simboliu + ir gali turėti tik skaitmenis.',
-
+            'phone_country' => 'Pasirinkite tinkamą šalies kodą!',
+            'phone_country.regex' => 'Netinkamas šalies kodas!'
         ];
     }
     protected function failedValidation(Validator $validator)

@@ -11,6 +11,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ReservationRequest extends FormRequest
 {
@@ -81,5 +82,7 @@ class ReservationRequest extends FormRequest
             if ($parking_space->fk_Parking_zoneid != $parking_zone->id || $reservation->fk_Parking_spaceid != $parking_space->id)
                 throw new NotFoundHttpException(response(['message' => 'Duomenys nerasti'], 404));
         }
+        $sub = JWTAuth::parseToken()->getPayload()->get('sub');
+        $this->merge(['fk_Userid' => $sub]);
     }
 }

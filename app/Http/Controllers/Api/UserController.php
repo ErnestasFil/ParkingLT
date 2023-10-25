@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\UserLoginRequest;
-use App\Http\Requests\UserRegisterRequest;
-use App\Http\Resources\NewUserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\UserLoginRequest;
+use App\Http\Resources\NewUserResource;
+use App\Http\Requests\UserRegisterRequest;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class UserController extends Controller
 {
@@ -37,6 +41,25 @@ class UserController extends Controller
             return response(['token' => $token, 'message' => 'Prisijungta sėkmingai!'], 200);
         }
         return response(['message' => 'Blogi prisijungimo duomenys!'], 401);
+    }
+    public function refreshToken()
+    {
+        $token = JWTAuth::getToken();
+        if (!$token) {
+            throw new BadRequestException('Žetonas nenurodytas!');
+        }
+        try {
+            JWTAuth::factory()->setTTL(120);
+            $token = JWTAuth::claims(["aud" => env('JWT_AUDIENCE', 'default')])->refresh(false, false);
+        } catch (TokenInvalidException $e) {
+            throw new AccessDeniedHttpException('Neteisingas žetonas!');
+        }
+        return response(['token' => $token, 'message' => 'Žetonas atnaujintas'], 200);
+    }
+    public function logout()
+    {
+        Auth::logout();
+        return response()->noContent();
     }
     public function index()
     {

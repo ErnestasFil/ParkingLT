@@ -15,8 +15,7 @@ class NewUserResource extends JsonResource
             'name' => $this->name,
             'surname' => $this->surname,
             'email' => $this->email,
-            'phone' => $this->phone,
-            'role' => $this->role
+            'phone' => $this->phone
         ];
     }
 }

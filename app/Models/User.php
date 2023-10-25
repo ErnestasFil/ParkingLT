@@ -43,7 +43,7 @@ class User extends Authenticatable implements JWTSubject
         return [
             "email" => $this->email,
             "role" => $this->getRole->name,
-            "aud" => env("JWT_AUDIENCE", "somedefaultvalue")
+            "aud" => env('JWT_AUDIENCE', 'default')
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Throwable;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -55,13 +56,19 @@ class Handler extends ExceptionHandler
                     ], 404);
                 } elseif ($e instanceof AuthenticationException) {
                     return response()->json([
-                        'message' => "Vartotojas nerpisijungęs!",
+                        'message' => "Vartotojas neprisijungęs!",
                     ], 401);
                 } elseif ($e instanceof MethodNotAllowedHttpException) {
                     return response()->json([
                         'message' => $e->getMessage(),
                     ], 405);
+                } elseif ($e instanceof HttpException && $e->getStatusCode() == 403) {
+                    return response()->json([
+                        'message' => $e->getMessage(),
+                    ], 403);
                 }
+            } else {
+                return parent::render($request, $e);
             }
         });
     }
