@@ -53,6 +53,8 @@ class UserController extends Controller
             $token = JWTAuth::claims(["aud" => env('JWT_AUDIENCE', 'default')])->refresh(false, false);
         } catch (TokenInvalidException $e) {
             throw new AccessDeniedHttpException('Neteisingas žetonas!');
+        } catch (\Exception $e) {
+            return response(['message' => $e->getMessage()], 401);
         }
         return response(['token' => $token, 'message' => 'Žetonas atnaujintas'], 200);
     }
