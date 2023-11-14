@@ -1,14 +1,17 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\ParkingZone;
 
-use App\Rules\PolygonCheckRule;
 use App\Rules\ValidPriceRule;
+use App\Rules\PolygonCheckRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use MatanYadaev\EloquentSpatial\Objects\LineString;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class ParkingZoneRequest extends FormRequest
+class CreateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,37 +20,15 @@ class ParkingZoneRequest extends FormRequest
     protected $rules = [];
     public function rules()
     {
-        $method = $this->method();
-        if (null !== $this->get('_method', null)) {
-            $method = $this->get('_method');
-        }
-        $this->offsetUnset('_method');
-        switch ($method) {
-            case 'POST':
-                $this->rules = [
-                    'name' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:40'],
-                    'colour' => ['required', 'regex:/^#([a-fA-F0-9]{6})$/'],
-                    'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
-                    'price' => ['required', new ValidPriceRule],
-                    'location_polygon' => ['required', new PolygonCheckRule],
-                    'information' => ['required', 'regex:/^[\p{L} \p{N},!-.]+$/u', 'min:10', 'max:200'],
-                    'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
-                ];
-                break;
-            case 'PUT':
-                $this->rules = [
-                    'name' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:40'],
-                    'colour' => ['required', 'regex:/^#([a-fA-F0-9]{6})$/'],
-                    'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
-                    'price' => ['required', new ValidPriceRule],
-                    'location_polygon' => ['required', new PolygonCheckRule],
-                    'information' => ['required', 'regex:/^[\p{L} \p{N}.,!-]+$/u', 'min:10', 'max:200'],
-                    'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
-                ];
-            default:
-                break;
-        }
-
+        $this->rules = [
+            'name' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:40'],
+            'colour' => ['required', 'regex:/^#([a-fA-F0-9]{6})$/'],
+            'paying_time' => ['required', 'integer', 'min:15', 'max:60'],
+            'price' => ['required', new ValidPriceRule],
+            'location_polygon' => ['required', new PolygonCheckRule],
+            'information' => ['required', 'regex:/^[\p{L} \p{N},!-.]+$/u', 'min:10', 'max:200'],
+            'city' => ['required', 'regex:/^[\p{L} ]+$/u', 'min:3', 'max:30']
+        ];
         return $this->rules;
     }
     public function messages()
@@ -78,5 +59,16 @@ class ParkingZoneRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json($validator->errors(), 422));
+    }
+    protected function passedValidation()
+    {
+        $polygon = new Polygon([
+            new LineString(array_map(function ($point) {
+                return new Point($point[0], $point[1]);
+            }, $this->location_polygon))
+        ], '4326');
+        $this->merge([
+            'location_polygon' => $polygon,
+        ]);
     }
 }

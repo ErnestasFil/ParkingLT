@@ -1,12 +1,19 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Reservation;
 
-use Illuminate\Contracts\Validation\Validator;
+use Carbon\Carbon;
+use App\Models\Reservation;
+use App\Models\Parking_zone;
+use App\Models\Parking_space;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Rules\ReservationChangeTimeRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class UserLoginRequest extends FormRequest
+class UpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,7 +23,7 @@ class UserLoginRequest extends FormRequest
     public function rules()
     {
         return [
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'password' => ['required']
         ];
     }

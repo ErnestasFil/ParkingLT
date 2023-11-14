@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
+use App\Models\Reservation;
+use App\Models\Parking_zone;
+use App\Models\Parking_space;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReservationRequest;
 use App\Http\Resources\ReservationResource;
-use App\Models\Parking_space;
-use App\Models\Parking_zone;
-use App\Models\Privilege;
-use App\Models\Reservation;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
+use App\Http\Requests\Reservation\CreateRequest;
+use App\Http\Requests\Reservation\UpdateRequest;
 
 class ReservationController extends Controller
 {
@@ -18,27 +19,17 @@ class ReservationController extends Controller
     {
         if ($parking_space->fk_Parking_zoneid != $parking_zone->id)
             return response(['message' => 'Duomenys nerasti'], 404);
-        return response(ReservationResource::collection($parking_space->Reservation), 200);
-    }
-    public function store(Parking_zone $parking_zone, Parking_space $parking_space, ReservationRequest $request)
-    {
-        if ($parking_space->fk_Parking_zoneid != $parking_zone->id)
-            return response(['message' => 'Duomenys nerasti'], 404);
-        $request->merge(["fk_Parking_spaceid" => $parking_space->id]);
-        $price = ceil($request->time / $parking_zone->paying_time) * $parking_zone->price;
-        if ($request->fk_Privilegeid != null) {
-            $privilege = Privilege::findOrFail($request->fk_Privilegeid);
-            $price -= $price * ($privilege->discount / 100);
+        $token = JWTAuth::parseToken()->getPayload();
+        if ($token->get('role') == 'Administrator') {
+            $reservations = $parking_space->Reservation;
+        } else {
+            $reservations = $parking_space->Reservation->where('fk_Userid', $token->get('sub'));
         }
-        $reservation = Reservation::create([
-            'fk_Userid' => $request->fk_Userid,
-            'fk_Parking_spaceid' => $request->fk_Parking_spaceid,
-            'fk_Privilegeid' => $request->fk_Privilegeid != null ? $request->fk_Privilegeid : null,
-            'date_from' => Carbon::now()->toDateTimeString(),
-            'date_until' => Carbon::now()->addMinutes(ceil($request->time / $parking_zone->paying_time) * $parking_zone->paying_time)->toDateTimeString(),
-            'price' => number_format($price, 2, '.', '')
-        ]);
-        return response(new ReservationResource($reservation), 201);
+        return response(ReservationResource::collection($reservations), 200);
+    }
+    public function store(Parking_zone $parking_zone, Parking_space $parking_space, CreateRequest $request)
+    {
+        return response(new ReservationResource(Reservation::create($request->all())), 201);
     }
     public function show(Parking_zone $parking_zone, Parking_space $parking_space, Reservation $reservation)
     {
@@ -46,17 +37,9 @@ class ReservationController extends Controller
             return response(['message' => 'Duomenys nerasti'], 404);
         return response(new ReservationResource($reservation), 200);
     }
-    public function update(Parking_zone $parking_zone, Parking_space $parking_space, Reservation $reservation, ReservationRequest $request)
+    public function update(Parking_zone $parking_zone, Parking_space $parking_space, Reservation $reservation, UpdateRequest $request)
     {
-        $price = ceil($request->time / $parking_zone->paying_time) * $parking_zone->price;
-        if ($reservation->fk_Privilegeid != null) {
-            $price -= $price * ($reservation->Privilege->discount / 100);
-        }
-        $dateFrom = Carbon::parse($reservation->date_from);
-        $reservation->update([
-            'date_until' => $dateFrom->addMinutes(ceil($request->time / $parking_zone->paying_time) * $parking_zone->paying_time)->toDateTimeString(),
-            'price' => number_format($price, 2, '.', '')
-        ]);
+        $reservation->update($request->all());
         return response(new ReservationResource($reservation), 200);
     }
     public function destroy(Parking_zone $parking_zone, Parking_space $parking_space, Reservation $reservation,)

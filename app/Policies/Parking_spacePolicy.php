@@ -3,27 +3,25 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Reservation;
-use App\Models\Parking_zone;
 use App\Models\Parking_space;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Auth\Access\Response;
 
-class ReservationPolicy
+class Parking_spacePolicy
 {
-    public function view(User $user, Reservation $reservation): Response
+    public function create(User $user): Response
     {
         $token = JWTAuth::parseToken()->getPayload();
-        if ($token->get('role') == 'Administrator' || $token->get('sub') == $reservation->fk_Userid) return Response::allow();
+        if ($token->get('role') == 'Administrator') return Response::allow();
         return Response::deny('Priėjimas negalimas');
     }
-    public function update(User $user, Reservation $reservation): Response
+    public function update(User $user, Parking_space $parkingSpace): Response
     {
         $token = JWTAuth::parseToken()->getPayload();
-        if ($token->get('role') == 'Administrator' || $token->get('sub') == $reservation->fk_Userid) return Response::allow();
+        if ($token->get('role') == 'Administrator') return Response::allow();
         return Response::deny('Priėjimas negalimas');
     }
-    public function delete(User $user, Reservation $reservation): Response
+    public function delete(User $user, Parking_space $parkingSpace): Response
     {
         $token = JWTAuth::parseToken()->getPayload();
         if ($token->get('role') == 'Administrator') return Response::allow();

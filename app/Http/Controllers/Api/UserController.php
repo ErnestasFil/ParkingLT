@@ -6,31 +6,21 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\UserLoginRequest;
-use App\Http\Resources\NewUserResource;
-use App\Http\Requests\UserRegisterRequest;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
+use App\Http\Resources\NewUserResource;
+use App\Http\Requests\User\LoginRequest;
+use App\Http\Requests\User\RegisterRequest;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class UserController extends Controller
 {
-    public function register(UserRegisterRequest $request)
+    public function register(RegisterRequest $request)
     {
-        $user = User::create([
-            "name" => $request->name,
-            "surname" => $request->surname,
-            "email" => $request->email,
-            "phone" => $request->phone,
-            "password" => Hash::make($request->password),
-            "balance" => 0,
-            "role" => 2
-        ]);
-        return response(new NewUserResource($user), 201);
+        return response(new NewUserResource(User::create($request->all())), 201);
     }
-    public function login(UserLoginRequest $request)
+    public function login(LoginRequest $request)
     {
         JWTAuth::factory()->setTTL(120);
         $token = JWTAuth::attempt([

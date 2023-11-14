@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ParkingZoneRequest;
+use App\Http\Requests\ParkingZone\CreateRequest;
+use App\Http\Requests\ParkingZone\UpdateRequest;
 use App\Http\Resources\ParkingZoneResource;
 use App\Models\Parking_zone;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
 
 class ParkingZoneController extends Controller
 {
@@ -16,44 +14,17 @@ class ParkingZoneController extends Controller
     {
         return response(ParkingZoneResource::collection(Parking_zone::all()), 200);
     }
-    public function store(ParkingZoneRequest $request)
+    public function store(CreateRequest $request)
     {
-        $polygon = new Polygon([
-            new LineString(array_map(function ($point) {
-                return new Point($point[0], $point[1]);
-            }, $request->location_polygon))
-        ], '4326');
-        $parking_zone = Parking_zone::create([
-            'name' => $request->name,
-            'colour' => $request->colour,
-            'paying_time' => $request->paying_time,
-            'price' => $request->price,
-            'location_polygon' => $polygon,
-            'information' => $request->information,
-            'city' => $request->city
-        ]);
-        return response(new ParkingZoneResource($parking_zone), 201);
+        return response(new ParkingZoneResource(Parking_zone::create($request->all())), 201);
     }
     public function show(Parking_zone $parking_zone)
     {
         return response(new ParkingZoneResource($parking_zone), 200);
     }
-    public function update(ParkingZoneRequest $request, Parking_zone $parking_zone)
+    public function update(UpdateRequest $request, Parking_zone $parking_zone)
     {
-        $polygon = new Polygon([
-            new LineString(array_map(function ($point) {
-                return new Point($point[0], $point[1]);
-            }, $request->location_polygon))
-        ], '4326');
-        $parking_zone->update([
-            'name' => $request->name,
-            'colour' => $request->colour,
-            'paying_time' => $request->paying_time,
-            'price' => $request->price,
-            'location_polygon' => $polygon,
-            'information' => $request->information,
-            'city' => $request->city
-        ]);
+        $parking_zone->update($request->all());
         return response(new ParkingZoneResource($parking_zone), 200);
     }
     public function destroy(Parking_zone $parking_zone)
