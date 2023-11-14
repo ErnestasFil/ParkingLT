@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\Parking_space;
 use App\Models\Parking_zone;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Policies\Parking_spacePolicy;
 use App\Policies\Parking_zonePolicy;
 use App\Policies\ReservationPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -21,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
         Reservation::class =>  ReservationPolicy::class,
         Parking_zone::class => Parking_zonePolicy::class,
         Parking_space::class => Parking_spacePolicy::class,
+        User::class => UserPolicy::class,
     ];
 
     /**

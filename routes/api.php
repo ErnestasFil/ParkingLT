@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\Reservation;
 use App\Models\Parking_zone;
 use App\Models\Parking_space;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,15 +38,18 @@ Route::prefix('V1')->group(function () {
         Route::prefix('/parking_space/{parking_space}')->group(function () {
             Route::get('/reservation', [ReservationController::class, 'index'])->name('index')->middleware('auth:api', 'role:User,Administrator');
             Route::get('/reservation/{reservation}', [ReservationController::class, 'show'])->name('show')->middleware('auth:api', 'can:view,reservation');
-            Route::post('/reservation', [ReservationController::class, 'store'])->name('store')->middleware('jsonFormat', 'auth:api', 'role:User,Administrator');
-            Route::patch('/reservation/{reservation}', [ReservationController::class, 'update'])->name('update')->middleware('jsonFormat', 'auth:api', 'role:User,Administrator', 'can:update,reservation');
+            Route::post('/reservation', [ReservationController::class, 'store'])->name('store')->middleware('jsonFormat', 'auth:api', 'can:create,App\Models\Reservation');
+            Route::patch('/reservation/{reservation}', [ReservationController::class, 'update'])->name('update')->middleware('jsonFormat', 'auth:api', 'can:update,reservation');
             Route::delete('/reservation/{reservation}', [ReservationController::class, 'destroy'])->name('destroy')->middleware('jsonFormat', 'auth:api', 'can:delete,reservation');
         });
     });
     Route::post('/register', [UserController::class, 'register'])->name('register')->middleware('jsonFormat');
     Route::post('/login', [UserController::class, 'login'])->name('login')->middleware('jsonFormat');
-    Route::post('/refresh', [UserController::class, 'refreshToken'])->name('refreshToken')->middleware('auth:api');
+    Route::post('/refresh', [UserController::class, 'refreshToken'])->name('refreshToken');
     Route::post('/logout', [UserController::class, 'logout'])->name('logout')->middleware('auth:api');
 
-    Route::get('/user', [UserController::class, 'index'])->name('index')->middleware('auth:api');
+    Route::get('/user', [UserController::class, 'index'])->name('index')->middleware('auth:api', 'can:viewAny,App\Models\User');
+    Route::get('/user/{user}', [UserController::class, 'show'])->name('show')->middleware('auth:api', 'can:view,user');
+    Route::patch('/user/{user}', [UserController::class, 'update'])->name('update')->middleware('jsonFormat', 'auth:api', 'can:update,user');
+    Route::delete('/user/{user}', [UserController::class, 'destroy'])->name('destroy')->middleware('jsonFormat', 'auth:api', 'can:delete,user');
 });

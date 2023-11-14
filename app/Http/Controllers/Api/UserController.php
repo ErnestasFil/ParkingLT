@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResourse;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\NewUserResource;
 use App\Http\Requests\User\LoginRequest;
+use App\Http\Requests\User\UpdateRequest;
 use App\Http\Requests\User\RegisterRequest;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -28,7 +31,8 @@ class UserController extends Controller
             "password" => $request->password
         ]);
         if (!empty($token)) {
-            return response(['token' => $token, 'message' => 'Prisijungta sėkmingai!'], 200);
+            $expiresAt = Carbon::now()->addMinutes(120)->toDateTimeString();
+            return response(['message' => 'Prisijungta sėkmingai!', 'access_token' => $token, 'token_type' => 'bearer', 'expires_in' => $expiresAt], 200);
         }
         return response(['message' => 'Blogi prisijungimo duomenys!'], 401);
     }
@@ -46,7 +50,8 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response(['message' => $e->getMessage()], 401);
         }
-        return response(['token' => $token, 'message' => 'Žetonas atnaujintas'], 200);
+        $expiresAt = Carbon::now()->addMinutes(120)->toDateTimeString();
+        return response(['message' => 'Žetonas atnaujintas', 'token' => $token, 'token_type' => 'bearer', 'expires_in' => $expiresAt], 200);
     }
     public function logout()
     {
@@ -55,38 +60,21 @@ class UserController extends Controller
     }
     public function index()
     {
-        return response(User::all(), 200);
+        return response(UserResourse::collection(User::all()), 200);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
     public function show(User $user)
     {
-        //
+        return response(new UserResourse($user), 200);
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
+    public function update(UpdateRequest $request, User $user)
     {
-        //
+        $user->update($request->all());
+        return response(new UserResourse($user), 200);
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user)
     {
-        //
+        $user->delete();
+        Auth::invalidate();
+        return response('', 204);
     }
 }

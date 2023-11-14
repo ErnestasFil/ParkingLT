@@ -5,13 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParkingSpace\CreateRequest;
 use App\Http\Requests\ParkingSpace\UpdateRequest;
-use App\Http\Requests\ParkingSpaceRequest;
 use App\Http\Resources\ParkingSpaceResource;
 use App\Models\Parking_space;
 use App\Models\Parking_zone;
-use MatanYadaev\EloquentSpatial\Objects\LineString;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
 
 class ParkingSpaceController extends Controller
 {

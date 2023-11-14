@@ -14,13 +14,19 @@ class ReservationPolicy
     public function view(User $user, Reservation $reservation): Response
     {
         $token = JWTAuth::parseToken()->getPayload();
-        if ($token->get('role') == 'Administrator' || $token->get('sub') == $reservation->fk_Userid) return Response::allow();
+        if ($token->get('role') == 'Administrator' || ($token->get('sub') == $reservation->fk_Userid && $token->get('role') == 'User')) return Response::allow();
         return Response::deny('Priėjimas negalimas');
     }
     public function update(User $user, Reservation $reservation): Response
     {
         $token = JWTAuth::parseToken()->getPayload();
-        if ($token->get('role') == 'Administrator' || $token->get('sub') == $reservation->fk_Userid) return Response::allow();
+        if ($token->get('role') == 'Administrator' || ($token->get('sub') == $reservation->fk_Userid && $token->get('role') == 'User')) return Response::allow();
+        return Response::deny('Priėjimas negalimas');
+    }
+    public function create(User $user): Response
+    {
+        $token = JWTAuth::parseToken()->getPayload();
+        if ($token->get('role') == 'Administrator' || $token->get('role') == 'User') return Response::allow();
         return Response::deny('Priėjimas negalimas');
     }
     public function delete(User $user, Reservation $reservation): Response
