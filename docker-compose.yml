@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+    database:
+        image: mysql:8.2
+        container_name: mysql
+        command: --default-authentication-plugin=caching_sha2_password
+        ports:
+            - '3306:3306'
+        volumes:
+            - ./docker/data:/var/lib/mysql
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_USER=${DB_USERNAME}
+            - MYSQL_PASSWORD=${DB_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        networks:
+            - app-network
+
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: phpmyadmin
+        ports:
+            - '8081:80'
+        depends_on:
+            - database
+            - php
+        environment:
+            - PMA_ARBITRARY=1
+        networks:
+            - app-network
+
+    php:
+        container_name: laravel
+        build:
+            context: .
+            target: php
+            args:
+                - APP_ENV=${APP_ENV}
+        environment:
+            - APP_ENV=${APP_ENV}
+            - CONTAINER_ROLE=app
+        working_dir: /var/www/html
+        volumes:
+            - ./:/var/www/html
+        ports:
+            - '80:80'
+        depends_on:
+            - database
+        networks:
+            - app-network
+
+networks:
+    app-network:
+        driver: bridge
