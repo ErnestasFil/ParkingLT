@@ -4,8 +4,9 @@ import Default from '../layouts/default/Default.vue';
 import Home from '../views/Home';
 import Login from '../views/Login';
 import Register from '../views/Register';
-import Logout from '../components/Logout';
 import ParkingZone from '../views/ParkingZone';
+import EditParkingZone from '../views/EditParkingZone';
+import ParkingZoneAdd from '../views/ParkingZoneAdd';
 import ParkingSpace from '../views/ParkingSpace';
 const routes = [
   {
@@ -42,17 +43,6 @@ const routes = [
     ],
   },
   {
-    path: '/',
-    component: Default,
-    children: [
-      {
-        path: '',
-        name: 'Logout',
-        component: Logout,
-      },
-    ],
-  },
-  {
     path: '/parking_zone',
     component: Default,
     children: [
@@ -72,6 +62,30 @@ const routes = [
         path: '',
         name: 'ParkingSpace',
         component: ParkingSpace,
+      },
+    ],
+  },
+  {
+    path: '/parking_zone/:id',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'EditParkingZone',
+        component: EditParkingZone,
+      },
+    ],
+  },
+  {
+    path: '/parking_zone_add',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'ParkingZoneAdd',
+        component: ParkingZoneAdd,
       },
     ],
   },

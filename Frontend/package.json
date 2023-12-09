@@ -9,6 +9,7 @@
     "lint": "eslint . --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@mdi/font": "7.0.96",
     "awesome-phonenumber": "^6.2.0",
     "axios": "^1.6.2",

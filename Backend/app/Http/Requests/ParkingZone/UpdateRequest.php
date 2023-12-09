@@ -64,7 +64,7 @@ class UpdateRequest extends FormRequest
     {
         $polygon = new Polygon([
             new LineString(array_map(function ($point) {
-                return new Point($point[0], $point[1]);
+                return new Point($point[1], $point[0]);
             }, $this->location_polygon))
         ], '4326');
         $this->merge([

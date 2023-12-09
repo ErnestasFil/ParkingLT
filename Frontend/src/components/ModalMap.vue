@@ -2,9 +2,11 @@
   <v-row justify="center">
     <v-dialog v-model="isModalOpen" max-width="600" persistent>
       <v-card>
-        <v-card-title>
-          <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ fullData.name }} </span>
-        </v-card-title>
+        <v-toolbar>
+          <v-card-title>
+            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ fullData.name }} </span>
+          </v-card-title>
+        </v-toolbar>
         <v-card-text>
           <v-alert border="start" variant="tonal" title="Informacija">{{ fullData.information }} </v-alert>
           <v-table height="250px" class="pt-4 mx-lg-auto">
@@ -28,7 +30,7 @@
             </tbody>
           </v-table>
         </v-card-text>
-        <v-btn block outlined class="flex-grow-1" variant="tonal" @click="closeModal"> Parkavimo vietos zonoje </v-btn>
+        <v-btn block outlined class="flex-grow-1" variant="tonal" @click="openMap(fullData.id)"> Parkavimo vietos zonoje </v-btn>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="closeModal"> Uždaryti </v-btn>
@@ -59,6 +61,9 @@ export default {
       this.$emit('update:show', false);
       this.isModalOpen = false;
       this.$emit('modalClosed');
+    },
+    openMap(data) {
+      this.$router.push({ name: 'ParkingSpace', params: { id: data } });
     },
   },
 };

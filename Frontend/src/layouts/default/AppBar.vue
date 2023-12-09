@@ -44,6 +44,12 @@
           <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
         </v-list-item>
       </v-list>
+      <v-list v-if="isAdmin" title="dense" nav>
+        <v-list-item disabled>Administratoriaus meniu</v-list-item>
+        <v-list-item v-for="(item, index) in data.adminItems" :key="index" @click="navigateTo(item.path)">
+          <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
+        </v-list-item>
+      </v-list>
     </v-navigation-drawer>
     <v-main>
       <v-container fluid>
@@ -72,6 +78,10 @@ export default {
         { title: 'Test', path: 'About', icon: 'mdi-forum' },
       ],
       userMenuItems: [{ title: 'Profilis', path: 'Profile' }],
+      adminItems: [
+        { title: 'Parkavimosi zonos pridėjimas', path: 'ParkingZoneAdd', icon: 'mdi-plus' },
+        { title: 'Test', path: 'About', icon: 'mdi-forum' },
+      ],
     });
     const logout = async () => {
       try {
@@ -127,6 +137,9 @@ export default {
     const isAuthenticated = computed(() => {
       return store.getters.isAuthenticated;
     });
+    const isAdmin = computed(() => {
+      return store.getters.isAdmin;
+    });
     const handleResize = () => {
       drawer.value = window.innerWidth >= 768;
     };
@@ -154,6 +167,7 @@ export default {
       navigateTo,
       isAuthenticated,
       logout,
+      isAdmin,
     };
   },
 };

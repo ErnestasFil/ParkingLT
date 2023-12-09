@@ -59,6 +59,7 @@ const store = createStore({
   },
   getters: {
     isAuthenticated: (state) => !!state.login.token,
+    isAdmin: (state) => !!state.login.token && state.login.role === 'Administrator',
   },
 });
 

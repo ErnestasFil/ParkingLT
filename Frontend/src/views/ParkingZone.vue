@@ -38,24 +38,32 @@
               <td>
                 <v-btn @click="goToZone(item.id)" color="primary"> Atidaryti zoną </v-btn>
               </td>
+              <td v-if="isAdmin">
+                <v-btn density="comfortable" color="yellow" icon="mdi-note-edit" class="mr-3" @click="editItem(item.id)"></v-btn><v-btn density="comfortable" color="red" icon="mdi-delete-forever" @click="deleteItem(item.id, item.name)"></v-btn>
+              </td>
             </tr>
           </template>
         </v-data-table>
       </v-card>
+      <ConfirmModal ref="confirmModalRef" />
     </v-responsive>
   </v-container>
 </template>
 
 <script>
-import { reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 import AlertComponent from '../components/Alert.vue';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { useRouter } from 'vue-router';
+import store from '../plugins/store';
 export default {
   components: {
     AlertComponent,
+    ConfirmModal,
   },
   setup() {
+    const confirmModalRef = ref(null);
     const data = reactive({
       zoneData: [],
     });
@@ -67,6 +75,9 @@ export default {
       timeout: 10000,
     });
     const router = useRouter();
+    const isAdmin = computed(() => {
+      return store.getters.isAdmin;
+    });
     const tableHeaders = reactive([
       { title: 'Zonos pavadinimas', key: 'name' },
       { title: 'Miestas', key: 'city' },
@@ -74,6 +85,7 @@ export default {
       { title: 'Kaina', key: 'price' },
       { title: 'Informacija', key: 'information' },
       { title: '', key: '' },
+      ...(isAdmin.value ? [{ title: 'Admin meniu', key: '' }] : []),
     ]);
     onMounted(async () => {
       try {
@@ -101,14 +113,56 @@ export default {
       router.push({ name: 'ParkingSpace', params: { id: zoneId } });
       console.log(`Navigating to Zone ${zoneId}`);
     };
+    const deleteItem = async (zoneId, name) => {
+      const confirmation = await confirmModalRef.value.open('Parkavimo zonos pašalinimas', 'Ar tikrai norite pašalinti parkavimosi zoną - ' + name + ' ir visą su ja susijusią informaciją?');
+      if (confirmation) {
+        alert.show = false;
+        try {
+          console.log(store.state.login.token);
+          const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zoneId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: '*/*',
+              Authorization: `Bearer ${store.state.login.token}`,
+            },
+          });
+
+          if (response.status === 204) {
+            alert.show = true;
+            alert.type = 'success';
+            alert.title = 'Pašalinta!';
+            alert.text = 'Parkavimosi zona pašalinta sėkmingai!';
+            alert.timeout = 10000;
+            data.zoneData = data.zoneData.filter((item) => item.id !== zoneId);
+          }
+        } catch (error) {
+          console.log(error);
+          alert.show = true;
+          alert.type = 'error';
+          alert.title = 'Šalinimo klaida!';
+          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
+          alert.timeout = 10000;
+        }
+      }
+    };
+
+    const editItem = (zoneId) => {
+      router.push({ name: 'EditParkingZone', params: { id: zoneId } });
+      console.log(`Edit ${zoneId}`);
+    };
 
     return {
       alert,
       data,
       tableHeaders,
       goToZone,
+      deleteItem,
+      confirmModalRef,
+      editItem,
+      isAdmin,
     };
   },
+
   data() {
     return {
       search: '',

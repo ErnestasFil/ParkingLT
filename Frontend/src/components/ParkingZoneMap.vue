@@ -16,11 +16,11 @@ export default {
   },
   setup() {
     const data = reactive({
-      map: null,
       mapData: {},
       isModalOpen: false,
       clickedZoneData: null,
     });
+    let map = null;
     const dataModal = reactive({ show: false, fullData: {} });
     mapboxgl.accessToken = process.env.MAP_BOX;
 
@@ -50,24 +50,24 @@ export default {
     });
 
     const initializeMap = () => {
-      data.map = new mapboxgl.Map({
+      map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v12',
         center: [23.891521, 54.878326],
         zoom: 12,
       });
 
-      data.map.on('style.load', () => {
+      map.on('style.load', () => {
         addParkingZoneLayers();
       });
-      data.map.on('click', handleMapClick);
+      map.on('click', handleMapClick);
     };
 
     const addParkingZoneLayers = () => {
       data.mapData.parkingZones.forEach((zone, index) => {
         const layerId = `parkingZone-${index}`;
         const switchedCoordinates = zone.location_polygon.map(([lng, lat]) => [lat, lng]);
-        data.map.addSource(layerId, {
+        map.addSource(layerId, {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -81,7 +81,7 @@ export default {
           },
         });
 
-        data.map.addLayer({
+        map.addLayer({
           id: layerId,
           type: 'fill',
           source: layerId,
@@ -92,7 +92,7 @@ export default {
           },
         });
 
-        data.map.addLayer({
+        map.addLayer({
           id: `${layerId}-outline`,
           type: 'line',
           source: layerId,
@@ -106,7 +106,7 @@ export default {
     };
 
     const handleMapClick = (e) => {
-      const features = data.map.queryRenderedFeatures(e.point, {
+      const features = map.queryRenderedFeatures(e.point, {
         layers: data.mapData.parkingZones.map((zone, index) => `parkingZone-${index}`),
       });
       if (features.length > 0) {

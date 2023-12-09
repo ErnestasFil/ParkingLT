@@ -11,7 +11,7 @@
 <script>
 import { ref, reactive, onMounted, watch } from 'vue';
 import AlertComponent from '../components/Alert.vue';
-import MapComponent from '../components/Map.vue';
+import MapComponent from '../components/ParkingZoneMap.vue';
 import store from '../plugins/store';
 export default {
   components: {
