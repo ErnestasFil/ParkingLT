@@ -43,7 +43,11 @@
         <v-list-item v-for="(item, index) in data.sideitems" :key="index" @click="navigateTo(item.path)">
           <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
         </v-list-item>
+        <v-list-item v-if="isAuthenticated" v-for="(item, index) in data.userItems" :key="index" @click="navigateTo(item.path)">
+          <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
+        </v-list-item>
       </v-list>
+
       <v-list v-if="isAdmin" title="dense" nav>
         <v-list-item disabled>Administratoriaus meniu</v-list-item>
         <v-list-item v-for="(item, index) in data.adminItems" :key="index" @click="navigateTo(item.path)">
@@ -75,12 +79,12 @@ export default {
       ],
       sideitems: [
         { title: 'Parkavimosi zonos', path: 'ParkingZone', icon: 'mdi-map-legend' },
-        { title: 'Test', path: 'About', icon: 'mdi-forum' },
       ],
       userMenuItems: [{ title: 'Profilis', path: 'Profile' }],
+      userItems: [{ title: 'Mano rezervacijos', path: 'Reservations', icon: 'mdi-calendar-check' }],
       adminItems: [
         { title: 'Parkavimosi zonos pridėjimas', path: 'ParkingZoneAdd', icon: 'mdi-plus' },
-        { title: 'Test', path: 'About', icon: 'mdi-forum' },
+        { title: 'Rezervacijų sąrašas', path: 'AllReservations', icon: 'mdi-calendar-account' },
       ],
     });
     const logout = async () => {

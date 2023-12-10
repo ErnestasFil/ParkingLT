@@ -70,7 +70,7 @@ class UpdateRequest extends FormRequest
         $this->merge(["fk_Parking_zoneid" => $this->route('parking_zone')->id]);
         $polygon = new Polygon([
             new LineString(array_map(function ($point) {
-                return new Point($point[0], $point[1]);
+                return new Point($point[1], $point[0]);
             }, $this->location_polygon))
         ], '4326');
         $this->merge([

@@ -19,11 +19,12 @@ class ReservationController extends Controller
         if ($parking_space->fk_Parking_zoneid != $parking_zone->id)
             return response(['message' => 'Duomenys nerasti'], 404);
         $token = JWTAuth::parseToken()->getPayload();
-        if ($token->get('role') == 'Administrator') {
-            $reservations = $parking_space->Reservation;
-        } else {
-            $reservations = $parking_space->Reservation->where('fk_Userid', $token->get('sub'));
-        }
+        $reservations = $parking_space->Reservation;
+        // if ($token->get('role') == 'Administrator') {
+        //     
+        // } else {
+        //     $reservations = $parking_space->Reservation->where('fk_Userid', $token->get('sub'));
+        // }
         return response(ReservationResource::collection($reservations), 200);
     }
     public function store(Parking_zone $parking_zone, Parking_space $parking_space, CreateRequest $request)

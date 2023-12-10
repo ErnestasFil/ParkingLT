@@ -10,7 +10,7 @@
       <template v-else>
         <v-row no-gutters>
           <v-col cols="9">
-            <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData"></MapComponent> </v-sheet>
+            <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData" :spaceData="spaceData"></MapComponent> </v-sheet>
           </v-col>
 
           <v-col>
@@ -40,13 +40,11 @@
                       <td>Kaina:</td>
                       <td>{{ typeof zoneData.price !== 'undefined' ? zoneData.price.toFixed(2) + ' €' : 'N/A' }}</td>
                     </tr>
-                    <tr>
-                      <td>Spalva:</td>
-                      <td :style="{ backgroundColor: zoneData.colour }">{{ zoneData.colour }}</td>
-                    </tr>
                   </tbody>
                 </v-table>
               </v-card-text>
+
+              <v-btn v-if="isAdmin" block outlined class="flex-grow-1" variant="tonal" @click="addSpace"> Pridėti stovėjimo vietą </v-btn>
             </v-sheet>
           </v-col>
         </v-row>
@@ -56,11 +54,11 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import AlertComponent from '../components/Alert.vue';
 import MapComponent from '../components/ParkingSpaceMap.vue';
 import store from '../plugins/store';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 export default {
   components: {
@@ -76,11 +74,12 @@ export default {
       timeout: 10000,
     });
     const route = useRoute();
+    const router = useRouter();
     const zoneId = ref(route.params.id);
     const zoneData = ref(null);
     const isLoading = ref(true);
-    const mapData = reactive({ loading: false, name: '', colour: '', paying_time: 0, price: 0, location_polygon: [], information: '', city: '' });
-    const errors = {};
+    const spaceData = ref(null);
+    const mapData = reactive({ loading: false, name: '', paying_time: 0, price: 0, location_polygon: [], information: '', city: '' });
     const fetchData = async () => {
       alert.show = false;
       try {
@@ -94,13 +93,21 @@ export default {
         if (response.status === 200) {
           zoneData.value = response.data;
           mapData.name = zoneData.value.name;
-          mapData.colour = zoneData.value.colour;
           mapData.paying_time = zoneData.value.paying_time;
           mapData.price = zoneData.value.price;
           mapData.location_polygon = zoneData.value.location_polygon;
           mapData.information = zoneData.value.information;
           mapData.city = zoneData.value.city;
-          console.log(mapData);
+          await axios
+            .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, {
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: '*/*',
+              },
+            })
+            .then((response) => {
+              spaceData.value = response.data;
+            });
         }
       } catch (error) {
         console.log(error);
@@ -131,10 +138,20 @@ export default {
         store.commit('resetAlert');
       }
     };
+    const isAdmin = computed(() => {
+      return store.getters.isAdmin;
+    });
+    const addSpace = async () => {
+      router.push({ name: 'ParkingSpaceAdd', params: { id: zoneId.value } });
+    };
+    
     return {
       alert,
       isLoading,
       zoneData,
+      isAdmin,
+      addSpace,
+      spaceData,
     };
   },
 };

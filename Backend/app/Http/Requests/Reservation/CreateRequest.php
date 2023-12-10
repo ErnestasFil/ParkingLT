@@ -4,10 +4,11 @@ namespace App\Http\Requests\Reservation;
 
 use Carbon\Carbon;
 use App\Models\Privilege;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\Parking_zone;
 use App\Models\Parking_space;
+use App\Rules\ReservationCheck;
 use App\Rules\PrivilegeCheckRule;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -25,7 +26,7 @@ class CreateRequest extends FormRequest
         $this->rules = [
             'fk_Userid' => ['required', 'integer', 'exists:user,id'],
             'fk_Privilegeid' => ['integer', 'exists:privilege,id', new PrivilegeCheckRule($this->fk_Userid)],
-            'time' => ['required', 'integer', 'min:1', 'max:10080']
+            'time' => ['required', 'integer', 'min:1', 'max:10080', new ReservationCheck($this->fk_Parking_spaceid)]
         ];
 
 

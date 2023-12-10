@@ -1,22 +1,41 @@
 <template>
   <div id="map"></div>
+  <ModalMap :show="dataModal.show" :fullData="dataModal.fullData" :zoneData="dataModal.zoneData" :spaceFree="dataModal.spaceFree" @update:show="dataModal.show = $event" @modalClosed="handleModalClosed" @deleteSpace="removeSpace" />
+  <ConfirmModal ref="confirmModalRef" />
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted, watch, computed } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-
+import ModalMap from './ModalSpace.vue';
+import store from '../plugins/store';
+import axios from 'axios';
+import ConfirmModal from '../components/ConfirmModal.vue';
 export default {
+  components: {
+    ModalMap,
+    ConfirmModal,
+  },
   props: {
     zoneData: {
       type: Object,
     },
+    spaceData: {
+      type: Object,
+    },
   },
   setup(props, { emit }) {
+    const confirmModalRef = ref(null);
     let map = null;
     let draw = null;
     const zone = props.zoneData;
+    let space = props.spaceData;
+    const data = reactive({
+      isModalOpen: false,
+      clickedSpaceData: null,
+    });
+    const dataModal = reactive({ show: false, fullData: {}, zoneData: {}, spaceFree: false });
     const switchedCoordinates = zone.location_polygon.map(([lng, lat]) => [lat, lng]);
     mapboxgl.accessToken = process.env.MAP_BOX;
     const calculatePolygonCenter = (polygon) => {
@@ -46,6 +65,7 @@ export default {
 
       map.on('style.load', () => {
         initializeDraw();
+        initializeSpaceDraw();
       });
       map.on('click', handleMapClick);
     };
@@ -70,7 +90,7 @@ export default {
         source: 'parkingZone',
         layout: {},
         paint: {
-          'fill-color': zone.colour,
+          'fill-color': '#8edafa',
           'fill-opacity': 0.3,
         },
       });
@@ -84,6 +104,47 @@ export default {
           'line-color': '#000',
           'line-width': 1,
         },
+      });
+    };
+    const initializeSpaceDraw = () => {
+      space.forEach((space, index) => {
+        const layerId = `parkingSpace-${space.id}`;
+        const switchedCoordinates = space.location_polygon.map(([lng, lat]) => [lat, lng]);
+        map.addSource(layerId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [switchedCoordinates],
+            },
+            properties: {
+              spaceData: space,
+            },
+          },
+        });
+
+        map.addLayer({
+          id: layerId,
+          type: 'fill',
+          source: layerId,
+          layout: {},
+          paint: {
+            'fill-color': space.invalid_place ? '#1b0ecf' : '#0ecf1e',
+            'fill-opacity': 0.3,
+          },
+        });
+
+        map.addLayer({
+          id: `${layerId}-outline`,
+          type: 'line',
+          source: layerId,
+          layout: {},
+          paint: {
+            'line-color': '#000',
+            'line-width': 1,
+          },
+        });
       });
     };
 
@@ -100,23 +161,121 @@ export default {
     );
     const handleMapClick = (e) => {
       const features = map.queryRenderedFeatures(e.point, {
-        layers: data.mapData.parkingZones.map((zone, index) => `parkingZone-${index}`),
+        layers: space.map((zone, index) => `parkingSpace-${zone.id}`),
       });
       if (features.length > 0) {
-        data.clickedZoneData = features[0].properties.zoneData;
-        console.log('Clicked Zone Data:', JSON.parse(features[0].properties.zoneData));
-        dataModal.fullData = JSON.parse(features[0].properties.zoneData);
+        data.clickedSpaceData = features[0].properties.spaceData;
 
+        dataModal.fullData = JSON.parse(features[0].properties.spaceData);
+        dataModal.zoneData = zone;
+        if (isAuthenticated.value) {
+          console.log();
+          getReservations();
+        }
         dataModal.show = true;
       }
     };
+
+    const getReservations = async () => {
+      try {
+        await axios
+          .get(`${process.env.APP_URL}/parking_zone/${dataModal.zoneData.id}/parking_space/${dataModal.fullData.id}/reservation`, {
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: '*/*',
+              Authorization: `Bearer ${store.state.login.token}`,
+            },
+          })
+          .then((resData) => {
+            if (resData.status === 200) {
+              dataModal.spaceFree = isParkingSpaceFree(resData.data);
+            }
+          });
+      } catch (error) {
+        console.log(error);
+        const alert = {
+          show: true,
+          type: 'error',
+          title: 'Klaida!',
+          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+          timeout: 10000,
+        };
+        store.commit('setAlert', alert);
+      }
+    };
+    function isParkingSpaceFree(reservationData) {
+      if (reservationData.length === 0) {
+        return true;
+      }
+
+      const newestReservation = reservationData.reduce((prev, current) => {
+        return new Date(current.date_until) > new Date(prev.date_until) ? current : prev;
+      });
+
+      const now = new Date();
+      const reservationEndTime = new Date(newestReservation.date_until);
+
+      return now > reservationEndTime;
+    }
     const handleModalClosed = () => {
       dataModal.show = false;
     };
+    const removeSpace = async (zone, spaceId) => {
+      const confirmation = await confirmModalRef.value.open(
+        'Parkavimo vietos pašalinimas',
+        'Ar tikrai norite pašalinti stovėjimo vietą gatvėje - ' + dataModal.fullData.street + ' numeris ' + dataModal.fullData.space_number + ' ir visą su ja susijusią informaciją?'
+      );
+      if (confirmation) {
+        try {
+          console.log(store.state.login.token);
+          const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zone}/parking_space/${spaceId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: '*/*',
+              Authorization: `Bearer ${store.state.login.token}`,
+            },
+          });
+
+          if (response.status === 204) {
+            const alert = {
+              show: true,
+              type: 'success',
+              title: 'Pašalinta!',
+              text: 'Stovėjimo vieta pašalinta sėkmingai!',
+              timeout: 10000,
+            };
+            store.commit('setAlert', alert);
+
+            space = space.filter((spaceItem) => spaceItem.id !== spaceId);
+            const layerId = `parkingSpace-${spaceId}`;
+            const sourceId = layerId;
+            map.removeLayer(layerId);
+            map.removeLayer(`${layerId}-outline`);
+            map.removeSource(sourceId);
+          }
+        } catch (error) {
+          console.log(error);
+          const alert = {
+            show: true,
+            type: 'error',
+            title: 'Šalinimo klaida!',
+            text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+            timeout: 10000,
+          };
+          store.commit('setAlert', alert);
+        }
+      }
+    };
+    const isAuthenticated = computed(() => {
+      return store.getters.isAuthenticated;
+    });
     return {
       map,
       handleMapClick,
       handleModalClosed,
+      removeSpace,
+      dataModal,
+      confirmModalRef,
     };
   },
 };

@@ -56,6 +56,7 @@ const store = createStore({
         };
       }
     },
+    
   },
   getters: {
     isAuthenticated: (state) => !!state.login.token,

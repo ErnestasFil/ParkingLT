@@ -1,4 +1,3 @@
-// Composables
 import { createRouter, createWebHistory } from 'vue-router';
 import Default from '../layouts/default/Default.vue';
 import Home from '../views/Home';
@@ -8,6 +7,9 @@ import ParkingZone from '../views/ParkingZone';
 import EditParkingZone from '../views/EditParkingZone';
 import ParkingZoneAdd from '../views/ParkingZoneAdd';
 import ParkingSpace from '../views/ParkingSpace';
+import ParkingSpaceAdd from '../views/ParkingSpaceAdd';
+import EditParkingSpace from '../views/EditParkingSpace';
+import Reservation from '../views/Reservation';
 const routes = [
   {
     path: '/',
@@ -86,6 +88,42 @@ const routes = [
         path: '',
         name: 'ParkingZoneAdd',
         component: ParkingZoneAdd,
+      },
+    ],
+  },
+  {
+    path: '/parking_zone/:id/parking_space_add',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'ParkingSpaceAdd',
+        component: ParkingSpaceAdd,
+      },
+    ],
+  },
+  {
+    path: '/parking_zone/:parking_zone/parking_space/:parking_space',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'EditParkingSpace',
+        component: EditParkingSpace,
+      },
+    ],
+  },
+  {
+    path: '/parking_zone/:parking_zone/parking_space/:parking_space/reservation',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'Reservation',
+        component: Reservation,
       },
     ],
   },
