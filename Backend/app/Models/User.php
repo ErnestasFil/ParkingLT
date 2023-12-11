@@ -46,4 +46,8 @@ class User extends Authenticatable implements JWTSubject
             "aud" => env('JWT_AUDIENCE', 'default')
         ];
     }
+    public function Reservation()
+    {
+        return $this->hasMany(Reservation::class, 'fk_Userid');
+    }
 }

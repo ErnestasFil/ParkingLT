@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Reservation;
 use App\Models\Parking_zone;
 use App\Models\Parking_space;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ReservationResource;
+use App\Http\Resources\UserReservationResource;
 use App\Http\Requests\Reservation\CreateRequest;
 use App\Http\Requests\Reservation\UpdateRequest;
 
@@ -26,6 +28,17 @@ class ReservationController extends Controller
         //     $reservations = $parking_space->Reservation->where('fk_Userid', $token->get('sub'));
         // }
         return response(ReservationResource::collection($reservations), 200);
+    }
+    public function indexAll(User $user)
+    {
+        $token = JWTAuth::parseToken()->getPayload();
+
+        if ($token->get('role') == 'Administrator') {
+            $reservations = Reservation::all();
+        } else {
+            $reservations = $user->Reservation;
+        }
+        return response(UserReservationResource::collection($reservations), 200);
     }
     public function store(Parking_zone $parking_zone, Parking_space $parking_space, CreateRequest $request)
     {

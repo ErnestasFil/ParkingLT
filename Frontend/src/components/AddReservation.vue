@@ -74,7 +74,7 @@
             </v-sheet>
           </v-col>
         </v-row>
-        <v-btn v-if="isAuthenticated" block outlined class="flex-grow-1" variant="tonal"> Rezervuoti stovėjimo vietą </v-btn>
+        <v-btn v-if="isAuthenticated" block outlined class="flex-grow-1" variant="tonal" @click.native="agree"> Rezervuoti stovėjimo vietą </v-btn>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click.native="cancel"> Uždaryti </v-btn>
@@ -158,6 +158,8 @@ export default {
     agree() {
       this.resolve(true);
       this.opened = false;
+      const [selectedHours, selectedMinutes] = this.selectedTime.split(':').map(Number);
+      this.$emit('sendData', selectedHours * 60 + selectedMinutes);
     },
     cancel() {
       this.resolve(false);

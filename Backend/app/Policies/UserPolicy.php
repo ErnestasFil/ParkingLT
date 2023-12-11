@@ -14,6 +14,12 @@ class UserPolicy
         if ($token->get('role') == 'Administrator') return Response::allow();
         return Response::deny('Priėjimas negalimas');
     }
+    public function viewAnyReservation(User $user, User $model): Response
+    {
+        $token = JWTAuth::parseToken()->getPayload();
+        if ($token->get('role') == 'Administrator' || ($token->get('sub') == $model->id && $token->get('role') == 'User')) return Response::allow();
+        return Response::deny('Priėjimas negalimas');
+    }
     public function view(User $user, User $model): Response
     {
         $token = JWTAuth::parseToken()->getPayload();

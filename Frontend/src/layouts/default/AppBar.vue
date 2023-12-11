@@ -1,12 +1,12 @@
 <template>
   <v-app>
-    <v-app-bar :elevation="4" app fixed>
+    <v-app-bar :elevation="4" app elevate-on-scroll>
       <v-app-bar-nav-icon @click.stop="toggleSidebar"></v-app-bar-nav-icon>
       <router-link :to="{ name: 'Home' }" style="cursor: pointer; text-decoration: none; color: inherit">
         <v-toolbar-title> ParkingLT</v-toolbar-title>
       </router-link>
       <template v-slot:append>
-        <v-btn icon>
+        <v-btn icon class="mr-10">
           <v-menu activator="parent">
             <v-list
               ><template v-if="!isAuthenticated">
@@ -26,14 +26,6 @@
           </v-menu>
           <v-icon>mdi-account-circle</v-icon>
         </v-btn>
-
-        <v-btn icon>
-          <v-icon>mdi-magnify</v-icon>
-        </v-btn>
-
-        <v-btn icon>
-          <v-icon>mdi-dots-vertical</v-icon>
-        </v-btn>
       </template>
     </v-app-bar>
 
@@ -43,14 +35,14 @@
         <v-list-item v-for="(item, index) in data.sideitems" :key="index" @click="navigateTo(item.path)">
           <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
         </v-list-item>
-        <v-list-item v-if="isAuthenticated" v-for="(item, index) in data.userItems" :key="index" @click="navigateTo(item.path)">
+        <v-list-item v-if="isAuthenticated" v-for="(item, index) in data.userItems" :key="index" @click="navigateTo(item.path, item.id)">
           <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
         </v-list-item>
       </v-list>
 
       <v-list v-if="isAdmin" title="dense" nav>
         <v-list-item disabled>Administratoriaus meniu</v-list-item>
-        <v-list-item v-for="(item, index) in data.adminItems" :key="index" @click="navigateTo(item.path)">
+        <v-list-item v-for="(item, index) in data.adminItems" :key="index" @click="navigateTo(item.path, item.id)">
           <v-list-item :prepend-icon="item.icon">{{ item.title }}</v-list-item>
         </v-list-item>
       </v-list>
@@ -69,22 +61,22 @@ import { useRouter } from 'vue-router';
 import store from '../../plugins/store';
 import axios from 'axios';
 export default {
+  name: 'App',
   setup() {
     const drawer = ref(window.innerWidth >= 768);
+    const userId = store.state.login.sub;
     const router = useRouter();
     const data = reactive({
       navitems: [
         { title: 'Prisijungimas', path: 'Login' },
         { title: 'Registracija', path: 'Register' },
       ],
-      sideitems: [
-        { title: 'Parkavimosi zonos', path: 'ParkingZone', icon: 'mdi-map-legend' },
-      ],
+      sideitems: [{ title: 'Parkavimosi zonos', path: 'ParkingZone', icon: 'mdi-map-legend' }],
       userMenuItems: [{ title: 'Profilis', path: 'Profile' }],
-      userItems: [{ title: 'Mano rezervacijos', path: 'Reservations', icon: 'mdi-calendar-check' }],
+      userItems: [{ title: 'Mano rezervacijos', path: 'UserReservations', icon: 'mdi-calendar-check', id: userId }],
       adminItems: [
         { title: 'Parkavimosi zonos pridėjimas', path: 'ParkingZoneAdd', icon: 'mdi-plus' },
-        { title: 'Rezervacijų sąrašas', path: 'AllReservations', icon: 'mdi-calendar-account' },
+        { title: 'Rezervacijų sąrašas', path: 'AllReservations', icon: 'mdi-calendar-account', id: userId },
       ],
     });
     const logout = async () => {
@@ -152,8 +144,9 @@ export default {
       drawer.value = !drawer.value;
     };
 
-    const navigateTo = (path) => {
-      router.push({ name: path });
+    const navigateTo = (path, idVal) => {
+      console.log();
+      router.push({ name: path, params: { id: idVal } });
     };
 
     onMounted(() => {

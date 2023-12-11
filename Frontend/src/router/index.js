@@ -10,6 +10,8 @@ import ParkingSpace from '../views/ParkingSpace';
 import ParkingSpaceAdd from '../views/ParkingSpaceAdd';
 import EditParkingSpace from '../views/EditParkingSpace';
 import Reservation from '../views/Reservation';
+import UserReservations from '../views/UserReservations';
+import AllReservations from '../views/reservations';
 const routes = [
   {
     path: '/',
@@ -124,6 +126,30 @@ const routes = [
         path: '',
         name: 'Reservation',
         component: Reservation,
+      },
+    ],
+  },
+  {
+    path: '/user/:id/reservation',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'UserReservations',
+        component: UserReservations,
+      },
+    ],
+  },
+  {
+    path: '/user/:id/reservations',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'AllReservations',
+        component: AllReservations,
       },
     ],
   },

@@ -74,7 +74,7 @@
       </v-card>
     </v-dialog>
   </v-row>
-  <ModalReservation ref="confirmModalRef" />
+  <ModalReservation ref="confirmModalRef" @sendData="dataReceived" />
 </template>
 
 <script>
@@ -82,6 +82,7 @@ import store from '../plugins/store';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import ModalReservation from './AddReservation.vue';
+import axios from 'axios';
 export default {
   components: {
     ModalReservation,
@@ -125,6 +126,7 @@ export default {
   },
   setup(props, { emit }) {
     const confirmModalRef = ref(null);
+    let time = 0;
     const isAuthenticated = computed(() => {
       return store.getters.isAuthenticated;
     });
@@ -132,17 +134,66 @@ export default {
       return store.getters.isAdmin;
     });
     const router = useRouter();
+    const dataReceived = (data) => {
+      time = data;
+    };
     const makeReservation = async (zone, space) => {
-      
       emit('update:show', false);
-      //this.isModalOpen = false;
       emit('modalClosed');
       const confirmation = await confirmModalRef.value.open(zone, space);
-      console.log(confirmation);
-      //this.showReservation = true;
+      if (confirmation) {
+        axios
+          .post(
+            `${process.env.APP_URL}/parking_zone/${zone.id}/parking_space/${space.id}/reservation`,
+            { time },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: '*/*',
+                Authorization: `Bearer ${store.state.login.token}`,
+              },
+            }
+          )
+          .then((data) => {
+            if (data.status === 201) {
+              const createAlert = {
+                show: true,
+                type: 'success',
+                title: 'Rezervacija pridėta!',
+                text: '',
+                timeout: 10000,
+              };
+              store.commit('setAlert', createAlert);
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            alert.show = false;
+            if (error.response && error.response.status === 422) {
+              const alert = {
+                show: true,
+                type: 'error',
+                title: 'Klaida!',
+                text: error.response.data.time[0],
+                timeout: 10000,
+              };
+              store.commit('setAlert', alert);
+            } else {
+              const alert = {
+                show: true,
+                type: 'error',
+                title: 'Klaida!',
+                text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+                timeout: 10000,
+              };
+              store.commit('setAlert', alert);
+            }
+          });
+      }
     };
     return {
       makeReservation,
+      dataReceived,
       confirmModalRef,
       isAuthenticated,
       isAdmin,

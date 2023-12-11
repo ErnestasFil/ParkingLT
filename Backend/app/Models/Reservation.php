@@ -27,6 +27,10 @@ class Reservation extends Model
     {
         return $this->belongsTo(Parking_space::class, 'fk_Parking_spaceid');
     }
+    public function User()
+    {
+        return $this->belongsTo(User::class, 'fk_Userid');
+    }
     public function Privilege()
     {
         return $this->belongsTo(Privilege::class, 'fk_Privilegeid');
