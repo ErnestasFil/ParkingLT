@@ -97,8 +97,11 @@ import store from '../plugins/store';
 import { watch, onMounted, reactive } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
+import { useRouter } from 'vue-router';
 export default {
   setup() {
+    const router = useRouter();
     const toast = useToast();
     const data = reactive({ opened: false, reservationId: 0, spaceId: 0, zoneId: 0, resolve: null, reject: null, isLoading: true });
     const fullData = reactive({ zone: {}, space: {}, reservation: {} });
@@ -163,6 +166,43 @@ export default {
                           fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
                           generateTimeOptions(fullData.zone.paying_time);
                         }
+                      })
+                      .catch((error) => {
+                        if (error.response && error.response.status === 401) {
+                          refresh.refreshToken(router).then(() => {
+                            axios
+                              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Accept: '*/*',
+                                  Authorization: `Bearer ${store.state.login.token}`,
+                                },
+                              })
+                              .then((reserv) => {
+                                if (reserv.status === 200) {
+                                  fullData.reservation = reserv.data;
+                                  timeSelect.endTime = fullData.reservation.date_until;
+                                  fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                                  generateTimeOptions(fullData.zone.paying_time);
+                                }
+                              })
+                              .catch((error) => {});
+                          });
+                        } else if (error.response && error.response.status === 403) {
+                          toast.error('Prieiga negalima!', {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else if (error.response && error.response.status === 404) {
+                          toast.error(error.response.data.message, {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else {
+                          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                            timeout: 10000,
+                          });
+                        }
                       });
                   }
                 });
@@ -172,9 +212,21 @@ export default {
           data.isLoading = false;
         }, 1500);
       } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
+        if (error.response && error.response.status === 403) {
+          toast.error('Prieiga negalima!', {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.message, {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else {
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
+        }
       }
       return new Promise((resolve, reject) => {
         data.resolve = resolve;
@@ -190,8 +242,9 @@ export default {
       const updatedData = reactive({ price: 0, until: null });
       const [selectedHours, selectedMinutes] = timeSelect.selectedTime.split(':').map(Number);
       const time = selectedHours * 60 + selectedMinutes;
-      try {
-        const reservationUp = await axios.patch(
+
+      await axios
+        .patch(
           `${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`,
           { time: time },
           {
@@ -201,29 +254,68 @@ export default {
               Authorization: `Bearer ${store.state.login.token}`,
             },
           }
-        );
-        if (reservationUp.status === 200) {
-          updatedData.price = reservationUp.data.price;
-          updatedData.until = reservationUp.data.date_until;
-          toast.success('Rezervacijos informacija atnaujinta!', {
-            timeout: 10000,
-          });
-          data.resolve(updatedData);
+        )
+        .then((response) => {
+          if (response.status === 200) {
+            updatedData.price = response.data.price;
+            updatedData.until = response.data.date_until;
+            toast.success('Rezervacijos informacija atnaujinta!', {
+              timeout: 10000,
+            });
+            data.resolve(updatedData);
+            data.opened = false;
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            toast.error(error.response.data.time[0], {
+              timeout: 10000,
+            });
+          } else if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .patch(
+                  `${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`,
+                  { time: time },
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  }
+                )
+                .then((response) => {
+                  if (response.status === 200) {
+                    updatedData.price = response.data.price;
+                    updatedData.until = response.data.date_until;
+                    toast.success('Rezervacijos informacija atnaujinta!', {
+                      timeout: 10000,
+                    });
+                    data.resolve(updatedData);
+                    data.opened = false;
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
+          data.resolve(false);
           data.opened = false;
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 422) {
-          toast.error(error.response.data.time[0], {
-            timeout: 10000,
-          });
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-        data.resolve(false);
-        data.opened = false;
-      }
+        });
     };
     const generateTimeOptions = (payingTime) => {
       const startDate = new Date(fullData.reservation.date_from);

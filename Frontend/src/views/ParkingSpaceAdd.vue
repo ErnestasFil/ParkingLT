@@ -1,6 +1,7 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
+      <Loader v-if="isLoading" />
       <template v-if="true">
         <v-form @submit.prevent="create">
           <v-row no-gutters>
@@ -36,12 +37,15 @@
 import { ref, reactive } from 'vue';
 import MapComponent from '../components/AddSpaceMap.vue';
 import store from '../plugins/store';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import Loader from '../layouts/default/Loading.vue';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     MapComponent,
+    Loader,
   },
 
   methods: {
@@ -50,7 +54,9 @@ export default {
     },
   },
   setup() {
+    const isLoading = ref(true);
     const toast = useToast();
+    const router = useRouter();
     const route = useRoute();
     const zoneId = ref(route.params.id);
     let zoneData = reactive({ loading: false, space_number: 0, invalid_place: 0, street: '', location_polygon: [], information: '' });
@@ -58,46 +64,80 @@ export default {
     let newData = reactive({ data: null });
     const create = async () => {
       newData.data = null;
-      try {
-        Object.keys(errors).forEach((key) => delete errors[key]);
-        zoneData.loading = true;
-        await axios
-          .post(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, zoneData, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((data) => {
-            if (data.status === 201) {
-              toast.success('Stovėjimo vieta pridėtą!', {
+
+      Object.keys(errors).forEach((key) => delete errors[key]);
+      zoneData.loading = true;
+      await axios
+        .post(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, zoneData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((data) => {
+          if (data.status === 201) {
+            toast.success('Stovėjimo vieta pridėtą!', {
+              timeout: 10000,
+            });
+            newData.data = { ...zoneData };
+            zoneData.space_number++;
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            const info = error.response.data;
+            if (info.location_polygon) {
+              toast.error(info.location_polygon[0], {
                 timeout: 10000,
               });
-              newData.data = { ...zoneData };
-              zoneData.space_number++;
             }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          if (info.location_polygon) {
-            toast.error(info.location_polygon[0], {
+            Object.assign(errors, info);
+          } else if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .post(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, zoneData, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((data) => {
+                  if (data.status === 201) {
+                    toast.success('Stovėjimo vieta pridėtą!', {
+                      timeout: 10000,
+                    });
+                    newData.data = { ...zoneData };
+                    zoneData.space_number++;
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
               timeout: 10000,
             });
           }
-          Object.assign(errors, info);
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      } finally {
-        zoneData.loading = false;
-      }
+        });
+      zoneData.loading = false;
     };
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 1000);
     return {
       zoneData,
+      isLoading,
       errors,
       create,
       zoneId,

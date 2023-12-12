@@ -92,39 +92,38 @@ export default {
       ],
     });
     const logout = async () => {
-      try {
-        const response = await axios
-          .post(
-            `${process.env.APP_URL}/logout`,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${store.state.login.token}`,
-              },
-            }
-          )
-          .then((data) => {
-            if (data.status === 204) {
-              toast.success('Atsijungta sėkmingai!', {
-                timeout: 10000,
-              });
-              store.commit('removeUserData', null);
-              router.push({ name: 'Home' });
-            }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
-          toast.error('Prašome prisijungti iš naujo.', {
-            timeout: 10000,
-          });
-        } else {
-          toast.success(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-        store.commit('updateUserData', null);
-        router.push({ name: 'Home' });
-      }
+      await axios
+        .post(
+          `${process.env.APP_URL}/logout`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${store.state.login.token}`,
+            },
+          }
+        )
+        .then((data) => {
+          if (data.status === 204) {
+            toast.success('Atsijungta sėkmingai!', {
+              timeout: 10000,
+            });
+            store.commit('removeUserData', null);
+            router.push({ name: 'Home' });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            toast.error('Prašome prisijungti iš naujo.', {
+              timeout: 10000,
+            });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
+          store.commit('updateUserData', null);
+          router.push({ name: 'Home' });
+        });
     };
     const isAuthenticated = computed(() => {
       return store.getters.isAuthenticated;
@@ -141,7 +140,6 @@ export default {
     };
 
     const navigateTo = (path, idVal) => {
-      console.log();
       router.push({ name: path, params: { id: idVal } });
     };
 

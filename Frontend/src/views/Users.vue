@@ -64,18 +64,21 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
 import EditModal from '../components/EditUser.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     EditModal,
     ConfirmModal,
   },
   setup() {
+    const router = useRouter();
     const toast = useToast();
     const confirmModalRef = ref(null);
     const editRef = ref(null);
@@ -96,37 +99,74 @@ export default {
     ]);
 
     onMounted(async () => {
-      try {
-        axios
-          .get(`${process.env.APP_URL}/user`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((response) => {
-            if (response.status === 200) {
-              data.users = response.data.filter((item) => item.id !== Number(store.state.login.sub));
-              data.users.forEach((user) => {
-                if (user.role && user.role === 'User') {
-                  user.role = 'Vartotojas';
-                } else if (user.role && user.role === 'Administrator') {
-                  user.role = 'Administratorius';
-                } else {
-                  user.role = 'Nepatvirtintas vartotojas';
-                }
-              });
-            }
-          });
-        setTimeout(() => {
-          isLoading.value = false;
-        }, 2000);
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
+      await axios
+        .get(`${process.env.APP_URL}/user`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            data.users = response.data.filter((item) => item.id !== Number(store.state.login.sub));
+            data.users.forEach((user) => {
+              if (user.role && user.role === 'User') {
+                user.role = 'Vartotojas';
+              } else if (user.role && user.role === 'Administrator') {
+                user.role = 'Administratorius';
+              } else {
+                user.role = 'Nepatvirtintas vartotojas';
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .get(`${process.env.APP_URL}/user`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((response) => {
+                  if (response.status === 200) {
+                    data.users = response.data.filter((item) => item.id !== Number(store.state.login.sub));
+                    data.users.forEach((user) => {
+                      if (user.role && user.role === 'User') {
+                        user.role = 'Vartotojas';
+                      } else if (user.role && user.role === 'Administrator') {
+                        user.role = 'Administratorius';
+                      } else {
+                        user.role = 'Nepatvirtintas vartotojas';
+                      }
+                    });
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
-      }
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 2000);
     });
     const editItem = async (userId) => {
       const confirmation = await editRef.value.open(userId);
@@ -143,27 +183,59 @@ export default {
     const deleteInfo = async (userId, email) => {
       const confirmation = await confirmModalRef.value.open('Vartotojo šalinimas', 'Ar tikrai norite pašalinti šį vartotoją - ' + email + ' ?');
       if (confirmation) {
-        try {
-          console.log(store.state.login.token);
-          const response = await axios.delete(`${process.env.APP_URL}/user/${userId}`, {
+        await axios
+          .delete(`${process.env.APP_URL}/user/${userId}`, {
             headers: {
               'Content-Type': 'application/json',
               Accept: '*/*',
               Authorization: `Bearer ${store.state.login.token}`,
             },
+          })
+          .then((response) => {
+            if (response.status === 204) {
+              toast.success('Vartotojas pašalintas sėkmingai!', {
+                timeout: 10000,
+              });
+              data.users = data.users.filter((user) => user.id !== userId);
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .delete(`${process.env.APP_URL}/user/${userId}`, {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  })
+                  .then((response) => {
+                    if (response.status === 204) {
+                      toast.success('Vartotojas pašalintas sėkmingai!', {
+                        timeout: 10000,
+                      });
+                      data.users = data.users.filter((user) => user.id !== userId);
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else {
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                timeout: 10000,
+              });
+            }
           });
-
-          if (response.status === 204) {
-            toast.success('Vartotojas pašalintas sėkmingai!', {
-              timeout: 10000,
-            });
-            data.users = data.users.filter((user) => user.id !== userId);
-          }
-        } catch (error) {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
       }
     };
 

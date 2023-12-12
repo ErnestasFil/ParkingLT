@@ -48,9 +48,7 @@ export default {
                 email: decoded.email,
                 role: decoded.role,
               };
-
               store.commit('jwt', token);
-              console.log(store.state.login);
               toast.success(info.message, {
                 timeout: 10000,
               });

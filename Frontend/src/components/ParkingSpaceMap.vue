@@ -13,6 +13,8 @@ import store from '../plugins/store';
 import axios from 'axios';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     ModalMap,
@@ -27,6 +29,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const router = useRouter();
     const toast = useToast();
     const confirmModalRef = ref(null);
     let map = null;
@@ -157,7 +160,6 @@ export default {
       () => props.zoneData,
       (newVal, oldVal) => {
         initializeMap();
-        console.log('ZoneData changed:', newVal);
       }
     );
     const handleMapClick = (e) => {
@@ -170,7 +172,6 @@ export default {
         dataModal.fullData = JSON.parse(features[0].properties.spaceData);
         dataModal.zoneData = zone;
         if (isAuthenticated.value) {
-          console.log();
           getReservations();
         }
         dataModal.show = true;
@@ -178,25 +179,53 @@ export default {
     };
 
     const getReservations = async () => {
-      try {
-        await axios
-          .get(`${process.env.APP_URL}/parking_zone/${dataModal.zoneData.id}/parking_space/${dataModal.fullData.id}/reservation`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((resData) => {
-            if (resData.status === 200) {
-              dataModal.spaceFree = isParkingSpaceFree(resData.data);
-            }
-          });
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
+      await axios
+        .get(`${process.env.APP_URL}/parking_zone/${dataModal.zoneData.id}/parking_space/${dataModal.fullData.id}/reservation`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((resData) => {
+          if (resData.status === 200) {
+            dataModal.spaceFree = isParkingSpaceFree(resData.data);
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .get(`${process.env.APP_URL}/parking_zone/${dataModal.zoneData.id}/parking_space/${dataModal.fullData.id}/reservation`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((resData) => {
+                  if (resData.status === 200) {
+                    dataModal.spaceFree = isParkingSpaceFree(resData.data);
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
-      }
     };
     function isParkingSpaceFree(reservationData) {
       if (reservationData.length === 0) {
@@ -221,32 +250,69 @@ export default {
         'Ar tikrai norite pašalinti stovėjimo vietą gatvėje - ' + dataModal.fullData.street + ' numeris ' + dataModal.fullData.space_number + ' ir visą su ja susijusią informaciją?'
       );
       if (confirmation) {
-        try {
-          console.log(store.state.login.token);
-          const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zone}/parking_space/${spaceId}`, {
+        await axios
+          .delete(`${process.env.APP_URL}/parking_zone/${zone}/parking_space/${spaceId}`, {
             headers: {
               'Content-Type': 'application/json',
               Accept: '*/*',
               Authorization: `Bearer ${store.state.login.token}`,
             },
+          })
+          .then((response) => {
+            if (response.status === 204) {
+              toast.success('Stovėjimo vieta pašalinta sėkmingai!', {
+                timeout: 10000,
+              });
+              space = space.filter((spaceItem) => spaceItem.id !== spaceId);
+              const layerId = `parkingSpace-${spaceId}`;
+              const sourceId = layerId;
+              map.removeLayer(layerId);
+              map.removeLayer(`${layerId}-outline`);
+              map.removeSource(sourceId);
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .delete(`${process.env.APP_URL}/parking_zone/${zone}/parking_space/${spaceId}`, {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  })
+                  .then((response) => {
+                    if (response.status === 204) {
+                      toast.success('Stovėjimo vieta pašalinta sėkmingai!', {
+                        timeout: 10000,
+                      });
+                      space = space.filter((spaceItem) => spaceItem.id !== spaceId);
+                      const layerId = `parkingSpace-${spaceId}`;
+                      const sourceId = layerId;
+                      map.removeLayer(layerId);
+                      map.removeLayer(`${layerId}-outline`);
+                      map.removeSource(sourceId);
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else {
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                timeout: 10000,
+              });
+            }
           });
-
-          if (response.status === 204) {
-            toast.error('Stovėjimo vieta pašalinta sėkmingai!', {
-              timeout: 10000,
-            });
-            space = space.filter((spaceItem) => spaceItem.id !== spaceId);
-            const layerId = `parkingSpace-${spaceId}`;
-            const sourceId = layerId;
-            map.removeLayer(layerId);
-            map.removeLayer(`${layerId}-outline`);
-            map.removeSource(sourceId);
-          }
-        } catch (error) {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
       }
     };
     const isAuthenticated = computed(() => {

@@ -1,4 +1,5 @@
 <template>
+  <Loader v-if="data.overlay" />
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
       <v-card flat>
@@ -54,15 +55,19 @@ import ConfirmModal from '../components/ConfirmModal.vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import store from '../plugins/store';
+import Loader from '../layouts/default/Loading.vue';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     ConfirmModal,
+    Loader,
   },
   setup() {
     const toast = useToast();
     const confirmModalRef = ref(null);
     const data = reactive({
       zoneData: [],
+      overlay: true,
     });
     const router = useRouter();
     const isAdmin = computed(() => {
@@ -94,36 +99,70 @@ export default {
           timeout: 10000,
         });
       }
+      setTimeout(() => {
+        data.overlay = false;
+      }, 1000);
     });
 
     const goToZone = (zoneId) => {
       router.push({ name: 'ParkingSpace', params: { id: zoneId } });
-      console.log(`Navigating to Zone ${zoneId}`);
     };
     const deleteItem = async (zoneId, name) => {
       const confirmation = await confirmModalRef.value.open('Parkavimo zonos pašalinimas', 'Ar tikrai norite pašalinti parkavimosi zoną - ' + name + ' ir visą su ja susijusią informaciją?');
       if (confirmation) {
-        try {
-          console.log(store.state.login.token);
-          const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zoneId}`, {
+        await axios
+          .delete(`${process.env.APP_URL}/parking_zone/${zoneId}`, {
             headers: {
               'Content-Type': 'application/json',
               Accept: '*/*',
               Authorization: `Bearer ${store.state.login.token}`,
             },
+          })
+          .then((response) => {
+            if (response.status === 204) {
+              toast.success('Parkavimosi zona pašalinta sėkmingai!', {
+                timeout: 10000,
+              });
+              data.zoneData = data.zoneData.filter((item) => item.id !== zoneId);
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .delete(`${process.env.APP_URL}/parking_zone/${zoneId}`, {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  })
+                  .then((response) => {
+                    if (response.status === 204) {
+                      toast.success('Parkavimosi zona pašalinta sėkmingai!', {
+                        timeout: 10000,
+                      });
+                      data.zoneData = data.zoneData.filter((item) => item.id !== zoneId);
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else {
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                timeout: 10000,
+              });
+            }
           });
-
-          if (response.status === 204) {
-            toast.error('Parkavimosi zona pašalinta sėkmingai!', {
-              timeout: 10000,
-            });
-            data.zoneData = data.zoneData.filter((item) => item.id !== zoneId);
-          }
-        } catch (error) {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
       }
     };
 

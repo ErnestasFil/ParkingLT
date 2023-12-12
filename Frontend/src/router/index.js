@@ -14,6 +14,7 @@ import UserReservations from '../views/UserReservations';
 import AllReservations from '../views/Reservations';
 import Users from '../views/Users';
 import Profile from '../views/Profile';
+import NotFound from '../views/NotFound';
 const routes = [
   {
     path: '/',
@@ -179,11 +180,23 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/:notFound',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'NotFound',
+        component: NotFound,
+      },
+    ],
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes,
+  routes: routes,
 });
 
 export default router;

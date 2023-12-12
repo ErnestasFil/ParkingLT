@@ -8,8 +8,8 @@ import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import axios from 'axios';
-import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
 export default {
   props: {
     zoneData: {
@@ -17,6 +17,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const router = useRouter();
     const toast = useToast();
     mapboxgl.accessToken = process.env.MAP_BOX;
     let map = null;
@@ -166,29 +167,41 @@ export default {
       if (data.features.length > 0) {
         const newPolygon = data.features[0].geometry.coordinates[0];
         const switched = newPolygon.map(([lat, lng]) => [lng, lat]);
-        console.log('Updated Zone Polygon:', switched);
         emit('updatePolygon', switched);
       }
     };
 
     onMounted(async () => {
-      try {
-        const response = await axios.get(`${process.env.APP_URL}/parking_zone/${props.zoneData.zone.id}/parking_space`, {
+      await axios
+        .get(`${process.env.APP_URL}/parking_zone/${props.zoneData.zone.id}/parking_space`, {
           headers: {
             'Content-Type': 'application/json',
             Accept: '*/*',
           },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            data.mapData.parkingSpaces = response.data;
+            initializeMap();
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
-
-        if (response.status === 200) {
-          data.mapData.parkingSpaces = response.data;
-          initializeMap();
-        }
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
-      }
     });
 
     watch(

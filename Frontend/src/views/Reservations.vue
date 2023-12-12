@@ -82,9 +82,10 @@ import axios from 'axios';
 import InfoModal from '../components/ModalUserReservationInfo.vue';
 import EditModal from '../components/EditReservation.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     InfoModal,
@@ -97,6 +98,7 @@ export default {
     const informationRef = ref(null);
     const editRef = ref(null);
     const route = useRoute();
+    const router = useRouter();
     const userId = ref(route.params.id);
     const isLoading = ref(true);
     const data = reactive({
@@ -115,36 +117,71 @@ export default {
     ]);
 
     onMounted(async () => {
-      try {
-        axios
-          .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((response) => {
-            if (response.status === 200) {
-              data.reservations = response.data.sort((a, b) => new Date(b.date_until) - new Date(a.date_until));
-              data.reservations.forEach((reservation) => {
-                reservation.isEnded = new Date(reservation.date_until) < new Date() ? 'Pasibaigusi' : 'Galiojanti';
-                if (reservation.fk_Privilegeid) {
-                  reservation.fk_Privilegeid = 'Taip';
-                } else {
-                  reservation.fk_Privilegeid = 'Ne';
-                }
-              });
-            }
-          });
-        setTimeout(() => {
-          isLoading.value = false;
-        }, 2000);
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
+      await axios
+        .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            data.reservations = response.data.sort((a, b) => new Date(b.date_until) - new Date(a.date_until));
+            data.reservations.forEach((reservation) => {
+              reservation.isEnded = new Date(reservation.date_until) < new Date() ? 'Pasibaigusi' : 'Galiojanti';
+              if (reservation.fk_Privilegeid) {
+                reservation.fk_Privilegeid = 'Taip';
+              } else {
+                reservation.fk_Privilegeid = 'Ne';
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((response) => {
+                  if (response.status === 200) {
+                    data.reservations = response.data.sort((a, b) => new Date(b.date_until) - new Date(a.date_until));
+                    data.reservations.forEach((reservation) => {
+                      reservation.isEnded = new Date(reservation.date_until) < new Date() ? 'Pasibaigusi' : 'Galiojanti';
+                      if (reservation.fk_Privilegeid) {
+                        reservation.fk_Privilegeid = 'Taip';
+                      } else {
+                        reservation.fk_Privilegeid = 'Ne';
+                      }
+                    });
+                  }
+                });
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
-      }
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 2000);
     });
     const editItem = async (reservationId, spaceId, zoneId) => {
       const confirmation = await editRef.value.open(reservationId, spaceId, zoneId);
@@ -163,26 +200,59 @@ export default {
     const deleteInfo = async (reservationId, spaceId, zoneId) => {
       const confirmation = await confirmModalRef.value.open('Rezervacijos šalinimas', 'Ar tikrai norite pašalinti šią reservaziją?');
       if (confirmation) {
-        try {
-          const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zoneId}/parking_space/${spaceId}/reservation/${reservationId}`, {
+        await axios
+          .delete(`${process.env.APP_URL}/parking_zone/${zoneId}/parking_space/${spaceId}/reservation/${reservationId}`, {
             headers: {
               'Content-Type': 'application/json',
               Accept: '*/*',
               Authorization: `Bearer ${store.state.login.token}`,
             },
+          })
+          .then((response) => {
+            if (response.status === 204) {
+              toast.success('Rezervacija pašalinta sėkmingai!', {
+                timeout: 10000,
+              });
+              data.reservations = data.reservations.filter((reserv) => reserv.id !== reservationId);
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .delete(`${process.env.APP_URL}/parking_zone/${zoneId}/parking_space/${spaceId}/reservation/${reservationId}`, {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  })
+                  .then((response) => {
+                    if (response.status === 204) {
+                      toast.success('Rezervacija pašalinta sėkmingai!', {
+                        timeout: 10000,
+                      });
+                      data.reservations = data.reservations.filter((reserv) => reserv.id !== reservationId);
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else {
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                timeout: 10000,
+              });
+            }
           });
-
-          if (response.status === 204) {
-            toast.success('Rezervacija pašalinta sėkmingai!', {
-              timeout: 10000,
-            });
-            data.reservations = data.reservations.filter((reserv) => reserv.id !== reservationId);
-          }
-        } catch (error) {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
       }
     };
 

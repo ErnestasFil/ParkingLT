@@ -67,6 +67,7 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   setup() {
     const toast = useToast();
@@ -113,6 +114,41 @@ export default {
                           fullData.reservation = reserv.data;
                           fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
                         }
+                      })
+                      .catch((error) => {
+                        if (error.response && error.response.status === 401) {
+                          refresh.refreshToken(router).then(() => {
+                            axios
+                              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Accept: '*/*',
+                                  Authorization: `Bearer ${store.state.login.token}`,
+                                },
+                              })
+                              .then((reserv) => {
+                                if (reserv.status === 200) {
+                                  fullData.reservation = reserv.data;
+                                  fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                                }
+                              })
+                              .catch((error) => {});
+                          });
+                        } else if (error.response && error.response.status === 403) {
+                          toast.error('Prieiga negalima!', {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else if (error.response && error.response.status === 404) {
+                          toast.error(error.response.data.message, {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else {
+                          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                            timeout: 10000,
+                          });
+                        }
                       });
                   }
                 });
@@ -122,9 +158,21 @@ export default {
           data.isLoading = false;
         }, 1500);
       } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
+        if (error.response && error.response.status === 403) {
+          toast.error('Prieiga negalima!', {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.message, {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else {
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
+        }
       }
       return new Promise((resolve, reject) => {
         data.resolve = resolve;

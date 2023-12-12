@@ -1,10 +1,8 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <template v-if="isLoading">
-        <div>Loading...</div>
-      </template>
-      <template v-else>
+      <Loader v-if="isLoading" />
+      <template v-if="!isLoading">
         <v-row no-gutters>
           <v-col cols="9">
             <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData" :spaceData="spaceData"></MapComponent> </v-sheet>
@@ -51,15 +49,17 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch, computed } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import MapComponent from '../components/ParkingSpaceMap.vue';
 import store from '../plugins/store';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import Loader from '../layouts/default/Loading.vue';
 export default {
   components: {
     MapComponent,
+    Loader,
   },
   setup() {
     const toast = useToast();
@@ -71,39 +71,72 @@ export default {
     const spaceData = ref(null);
     const mapData = reactive({ loading: false, name: '', paying_time: 0, price: 0, location_polygon: [], information: '', city: '' });
     const fetchData = async () => {
-      try {
-        const response = await axios.get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
+      await axios
+        .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
           headers: {
             'Content-Type': 'application/json',
             Accept: '*/*',
           },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            zoneData.value = response.data;
+            mapData.name = zoneData.value.name;
+            mapData.paying_time = zoneData.value.paying_time;
+            mapData.price = zoneData.value.price;
+            mapData.location_polygon = zoneData.value.location_polygon;
+            mapData.information = zoneData.value.information;
+            mapData.city = zoneData.value.city;
+            axios
+              .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: '*/*',
+                },
+              })
+              .then((response) => {
+                spaceData.value = response.data;
+              })
+              .catch((error) => {
+                if (error.response && error.response.status === 403) {
+                  toast.error('Prieiga negalima!', {
+                    timeout: 10000,
+                  });
+                  router.push({ name: 'Home' });
+                } else if (error.response && error.response.status === 404) {
+                  toast.error(error.response.data.message, {
+                    timeout: 10000,
+                  });
+                  router.push({ name: 'Home' });
+                } else {
+                  toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                    timeout: 10000,
+                  });
+                }
+              });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
 
-        if (response.status === 200) {
-          zoneData.value = response.data;
-          mapData.name = zoneData.value.name;
-          mapData.paying_time = zoneData.value.paying_time;
-          mapData.price = zoneData.value.price;
-          mapData.location_polygon = zoneData.value.location_polygon;
-          mapData.information = zoneData.value.information;
-          mapData.city = zoneData.value.city;
-          await axios
-            .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space`, {
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: '*/*',
-              },
-            })
-            .then((response) => {
-              spaceData.value = response.data;
-            });
-        }
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
-      }
-      isLoading.value = false;
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 1000);
     };
 
     onMounted(() => {

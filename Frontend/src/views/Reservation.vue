@@ -53,9 +53,10 @@
 import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
 import ConfirmModal from '../components/ConfirmModal.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     ConfirmModal,
@@ -64,6 +65,7 @@ export default {
     const toast = useToast();
     const confirmModalRef = ref(null);
     const route = useRoute();
+    const router = useRouter();
     const zoneId = ref(route.params.parking_zone);
     const spaceId = ref(route.params.parking_space);
     const isLoading = ref(true);
@@ -125,22 +127,71 @@ export default {
                         }
                       })
                       .catch((error) => {
-                        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                          timeout: 10000,
-                        });
+                        if (error.response && error.response.status === 401) {
+                          refresh.refreshToken(router).then(() => {
+                            axios
+                              .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}/reservation`, {
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  Accept: '*/*',
+                                  Authorization: `Bearer ${store.state.login.token}`,
+                                },
+                              })
+                              .then((response) => {
+                                if (response.status === 200) {
+                                  data.reservations = response.data.filter((reservation) => String(reservation.fk_Userid) === store.state.login.sub).sort((a, b) => new Date(b.date_until) - new Date(a.date_until));
+
+                                  data.reservations.forEach((reservation) => {
+                                    reservation.isEnded = new Date(reservation.date_until) < new Date() ? 'Pasibaigusi' : 'Galiojanti';
+                                    if (reservation.fk_Privilegeid) {
+                                      reservation.fk_Privilegeid = 'Taip';
+                                    } else {
+                                      reservation.fk_Privilegeid = 'Ne';
+                                    }
+                                  });
+                                }
+                              })
+                              .catch((error) => {});
+                          });
+                        } else if (error.response && error.response.status === 403) {
+                          toast.error('Prieiga negalima!', {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else if (error.response && error.response.status === 404) {
+                          toast.error(error.response.data.message, {
+                            timeout: 10000,
+                          });
+                          router.push({ name: 'Home' });
+                        } else {
+                          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                            timeout: 10000,
+                          });
+                        }
                       });
                   }
                 });
-              console.log(data);
               setTimeout(() => {
                 isLoading.value = false;
               }, 2000);
             }
           });
       } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
+        if (error.response && error.response.status === 403) {
+          toast.error('Prieiga negalima!', {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.message, {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else {
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
+        }
       }
     });
 

@@ -1,10 +1,9 @@
 <template>
   <v-container class="fill-height">
-    <v-responsive class="align-center fill-height">
-      <template v-if="isLoading">
-        <div>Loading...</div>
-      </template>
-      <template v-else>
+    <v-responsive class="align-center fill-height"
+      ><Loader v-if="isLoading" />
+
+      <template v-if="!isLoading">
         <v-form @submit.prevent="update">
           <v-row no-gutters>
             <v-col cols="9">
@@ -78,9 +77,12 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import Loader from '../layouts/default/Loading.vue';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     MapComponent,
+    Loader,
   },
   data: () => ({
     menu: false,
@@ -158,50 +160,91 @@ export default {
             }
           });
       } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
+        if (error.response && error.response.status === 403) {
+          toast.error('Prieiga negalima!', {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.message, {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else {
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
+        }
       }
-      isLoading.value = false;
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 1000);
     };
 
     onMounted(() => {
       fetchData();
     });
     const update = async () => {
-      try {
-        Object.keys(errors).forEach((key) => delete errors[key]);
-        updateData.loading = true;
-        updateData.colour = color.value;
-        console.log(updateData);
-        await axios
-          .put(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}`, updateData, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((data) => {
-            if (data.status === 200) {
-              toast.success('Stovėjimo vietos informacija atnaujina!', {
-                timeout: 10000,
-              });
-              router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
-            }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          Object.assign(errors, info);
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      } finally {
-        updateData.loading = false;
-      }
+      Object.keys(errors).forEach((key) => delete errors[key]);
+      updateData.loading = true;
+      updateData.colour = color.value;
+      await axios
+        .put(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}`, updateData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((data) => {
+          if (data.status === 200) {
+            toast.success('Stovėjimo vietos informacija atnaujinta!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            const info = error.response.data;
+            Object.assign(errors, info);
+          } else if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .put(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}`, updateData, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((data) => {
+                  if (data.status === 200) {
+                    toast.success('Stovėjimo vietos informacija atnaujinta!', {
+                      timeout: 10000,
+                    });
+                    router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
+        });
+      updateData.loading = false;
     };
 
     return {

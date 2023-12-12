@@ -84,6 +84,7 @@ import { useRouter } from 'vue-router';
 import ModalReservation from './AddReservation.vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     ModalReservation,
@@ -144,7 +145,7 @@ export default {
       emit('modalClosed');
       const confirmation = await confirmModalRef.value.open(zone, space);
       if (confirmation) {
-        axios
+        await axios
           .post(
             `${process.env.APP_URL}/parking_zone/${zone.id}/parking_space/${space.id}/reservation`,
             { time },
@@ -168,6 +169,39 @@ export default {
               toast.error(error.response.data.time[0], {
                 timeout: 10000,
               });
+            } else if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .post(
+                    `${process.env.APP_URL}/parking_zone/${zone.id}/parking_space/${space.id}/reservation`,
+                    { time },
+                    {
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Accept: '*/*',
+                        Authorization: `Bearer ${store.state.login.token}`,
+                      },
+                    }
+                  )
+                  .then((data) => {
+                    if (data.status === 201) {
+                      toast.success('Rezervacija pridėta!', {
+                        timeout: 10000,
+                      });
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
             } else {
               toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
                 timeout: 10000,

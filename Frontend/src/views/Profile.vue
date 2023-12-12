@@ -71,6 +71,7 @@ import ConfirmModal from '../components/ConfirmModal.vue';
 import { useRoute, useRouter } from 'vue-router';
 import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     EditModal,
@@ -91,35 +92,76 @@ export default {
       user: [],
     });
     onMounted(async () => {
-      try {
-        axios
-          .get(`${process.env.APP_URL}/user/${userId.value}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((response) => {
-            if (response.status === 200) {
-              fullData.user = response.data;
-              if (fullData.user.role && fullData.user.role === 'User') {
-                fullData.user.role = 'Vartotojas';
-              } else if (fullData.user.role && fullData.user.role === 'Administrator') {
-                fullData.user.role = 'Administratorius';
-              } else {
-                fullData.user.role = 'Nepatvirtintas vartotojas';
-              }
-            }
-          });
-        setTimeout(() => {
-          data.isLoading = false;
-        }, 2000);
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+      if (Number(route.params.id) !== Number(store.state.login.sub)) {
+        toast.error('Prieiga negalima!', {
           timeout: 10000,
         });
+        router.push({ name: 'Home' });
       }
+      await axios
+        .get(`${process.env.APP_URL}/user/${userId.value}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            fullData.user = response.data;
+            if (fullData.user.role && fullData.user.role === 'User') {
+              fullData.user.role = 'Vartotojas';
+            } else if (fullData.user.role && fullData.user.role === 'Administrator') {
+              fullData.user.role = 'Administratorius';
+            } else {
+              fullData.user.role = 'Nepatvirtintas vartotojas';
+            }
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .get(`${process.env.APP_URL}/user/${userId.value}`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((response) => {
+                  if (response.status === 200) {
+                    fullData.user = response.data;
+                    if (fullData.user.role && fullData.user.role === 'User') {
+                      fullData.user.role = 'Vartotojas';
+                    } else if (fullData.user.role && fullData.user.role === 'Administrator') {
+                      fullData.user.role = 'Administratorius';
+                    } else {
+                      fullData.user.role = 'Nepatvirtintas vartotojas';
+                    }
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
+        });
+      setTimeout(() => {
+        data.isLoading = false;
+      }, 2000);
     });
     const edit = async () => {
       const confirmation = await editRef.value.open(userId);
@@ -132,28 +174,61 @@ export default {
     const remove = async () => {
       const confirmation = await confirmModalRef.value.open('Vartotojo šalinimas', 'Ar tikrai norite pašalinti savo paskyra ir visą susijusią informaciją iš sistemos?');
       if (confirmation) {
-        try {
-          console.log(store.state.login.token);
-          const response = await axios.delete(`${process.env.APP_URL}/user/${userId.value}`, {
+        axios
+          .delete(`${process.env.APP_URL}/user/${userId.value}`, {
             headers: {
               'Content-Type': 'application/json',
               Accept: '*/*',
               Authorization: `Bearer ${store.state.login.token}`,
             },
+          })
+          .then((response) => {
+            if (response.status === 204) {
+              toast.success('Vartotojas pašalintas sėkmingai!', {
+                timeout: 10000,
+              });
+              store.commit('updateUserData', null);
+              router.push({ name: 'Home' });
+            }
+          })
+          .catch((error) => {
+            if (error.response && error.response.status === 401) {
+              refresh.refreshToken(router).then(() => {
+                axios
+                  .delete(`${process.env.APP_URL}/user/${userId.value}`, {
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Accept: '*/*',
+                      Authorization: `Bearer ${store.state.login.token}`,
+                    },
+                  })
+                  .then((response) => {
+                    if (response.status === 204) {
+                      toast.success('Vartotojas pašalintas sėkmingai!', {
+                        timeout: 10000,
+                      });
+                      store.commit('updateUserData', null);
+                      router.push({ name: 'Home' });
+                    }
+                  })
+                  .catch((error) => {});
+              });
+            } else if (error.response && error.response.status === 403) {
+              toast.error('Prieiga negalima!', {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else if (error.response && error.response.status === 404) {
+              toast.error(error.response.data.message, {
+                timeout: 10000,
+              });
+              router.push({ name: 'Home' });
+            } else {
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+                timeout: 10000,
+              });
+            }
           });
-
-          if (response.status === 204) {
-            toast.success('Vartotojas pašalintas sėkmingai!', {
-              timeout: 10000,
-            });
-            store.commit('updateUserData', null);
-            router.push({ name: 'Home' });
-          }
-        } catch (error) {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
       }
     };
 

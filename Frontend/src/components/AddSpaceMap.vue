@@ -9,6 +9,7 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
 export default {
   props: {
     zoneId: {
@@ -20,13 +21,13 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const router = useRouter();
     const toast = useToast();
     watch(
       () => props.zoneData,
       (newZoneData) => {
         if (newZoneData !== null) {
           addSpace(newZoneData);
-          console.log('Received new zoneData:', newZoneData);
         }
       }
     );
@@ -71,9 +72,21 @@ export default {
           initializeMap();
         }
       } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
-        });
+        if (error.response && error.response.status === 403) {
+          toast.error('Prieiga negalima!', {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else if (error.response && error.response.status === 404) {
+          toast.error(error.response.data.message, {
+            timeout: 10000,
+          });
+          router.push({ name: 'Home' });
+        } else {
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
+        }
       }
     });
 

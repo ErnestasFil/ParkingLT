@@ -90,9 +90,12 @@
 import store from '../plugins/store';
 import { reactive } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   setup() {
+    const router = useRouter();
     const toast = useToast();
     const data = reactive({
       opened: false,
@@ -118,38 +121,77 @@ export default {
       dataSend.name = '';
       dataSend.surname = '';
       dataSend.phone = '';
-      try {
-        axios
-          .get(`${process.env.APP_URL}/user/${data.userId}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((dataUser) => {
-            if (dataUser.status === 200) {
-              fullData.user = dataUser.data;
-              if (fullData.user.role && fullData.user.role === 'User') {
-                fullData.user.role = 'Vartotojas';
-              } else if (fullData.user.role && fullData.user.role === 'Administrator') {
-                fullData.user.role = 'Administratorius';
-              } else {
-                fullData.user.role = 'Nepatvirtintas vartotojas';
-              }
-              dataSend.name = fullData.user.name;
-              dataSend.surname = fullData.user.surname;
-              dataSend.phone = fullData.user.phone;
+
+      axios
+        .get(`${process.env.APP_URL}/user/${data.userId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((dataUser) => {
+          if (dataUser.status === 200) {
+            fullData.user = dataUser.data;
+            if (fullData.user.role && fullData.user.role === 'User') {
+              fullData.user.role = 'Vartotojas';
+            } else if (fullData.user.role && fullData.user.role === 'Administrator') {
+              fullData.user.role = 'Administratorius';
+            } else {
+              fullData.user.role = 'Nepatvirtintas vartotojas';
             }
-          });
-        setTimeout(() => {
-          data.isLoading = false;
-        }, 1500);
-      } catch (error) {
-        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-          timeout: 10000,
+            dataSend.name = fullData.user.name;
+            dataSend.surname = fullData.user.surname;
+            dataSend.phone = fullData.user.phone;
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .get(`${process.env.APP_URL}/user/${data.userId}`, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((dataUser) => {
+                  if (dataUser.status === 200) {
+                    fullData.user = dataUser.data;
+                    if (fullData.user.role && fullData.user.role === 'User') {
+                      fullData.user.role = 'Vartotojas';
+                    } else if (fullData.user.role && fullData.user.role === 'Administrator') {
+                      fullData.user.role = 'Administratorius';
+                    } else {
+                      fullData.user.role = 'Nepatvirtintas vartotojas';
+                    }
+                    dataSend.name = fullData.user.name;
+                    dataSend.surname = fullData.user.surname;
+                    dataSend.phone = fullData.user.phone;
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
         });
-      }
+      setTimeout(() => {
+        data.isLoading = false;
+      }, 1500);
       return new Promise((resolve, reject) => {
         data.resolve = resolve;
         data.reject = reject;
@@ -163,40 +205,67 @@ export default {
       dataSend.phone_country = countryIso;
     };
     const edit = async () => {
-      try {
-        data.loading = true;
-        Object.keys(errors).forEach((key) => delete errors[key]);
-
-        await axios
-          .put(`${process.env.APP_URL}/user/${data.userId}`, dataSend, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-              Authorization: `Bearer ${store.state.login.token}`,
-            },
-          })
-          .then((dataUs) => {
-            if (dataUs.status === 200) {
-              toast.success('Vartotojo informacija atnaujinta!', {
-                timeout: 10000,
-              });
-              data.resolve(dataSend);
-              data.opened = false;
-            }
-          });
-      } catch (error) {
-        console.log(error);
-        if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          Object.assign(errors, info);
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      } finally {
-        data.loading = false;
-      }
+      data.loading = true;
+      Object.keys(errors).forEach((key) => delete errors[key]);
+      await axios
+        .put(`${process.env.APP_URL}/user/${data.userId}`, dataSend, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+            Authorization: `Bearer ${store.state.login.token}`,
+          },
+        })
+        .then((dataUs) => {
+          if (dataUs.status === 200) {
+            toast.success('Vartotojo informacija atnaujinta!', {
+              timeout: 10000,
+            });
+            data.resolve(dataSend);
+            data.opened = false;
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            const info = error.response.data;
+            Object.assign(errors, info);
+          } else if (error.response && error.response.status === 401) {
+            refresh.refreshToken(router).then(() => {
+              axios
+                .put(`${process.env.APP_URL}/user/${data.userId}`, dataSend, {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: '*/*',
+                    Authorization: `Bearer ${store.state.login.token}`,
+                  },
+                })
+                .then((dataUs) => {
+                  if (dataUs.status === 200) {
+                    toast.success('Vartotojo informacija atnaujinta!', {
+                      timeout: 10000,
+                    });
+                    data.resolve(dataSend);
+                    data.opened = false;
+                  }
+                })
+                .catch((error) => {});
+            });
+          } else if (error.response && error.response.status === 403) {
+            toast.error('Prieiga negalima!', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else if (error.response && error.response.status === 404) {
+            toast.error(error.response.data.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          } else {
+            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+              timeout: 10000,
+            });
+          }
+        });
+      data.loading = false;
     };
 
     return { data, dataSend, fullData, errors, onCountryUpdate, open, cancel, edit };

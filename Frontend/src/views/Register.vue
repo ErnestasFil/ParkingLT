@@ -22,13 +22,13 @@ import axios from 'axios';
 import 'flag-icons/css/flag-icons.min.css';
 import 'v-phone-input/dist/v-phone-input.css';
 import { VPhoneInput } from 'v-phone-input';
-import store from '../plugins/store';
 import { useToast } from 'vue-toastification';
 export default {
   components: {
     VPhoneInput,
   },
   setup() {
+    const toast = useToast();
     const data = reactive({ loading: false, name: '', surname: '', email: '', phone: '', phone_country: '', password: '', password_confirmation: '' });
     const errors = {};
     const router = useRouter();
@@ -46,7 +46,7 @@ export default {
           })
           .then((data) => {
             if (data.status === 201) {
-              toast.error('Sveikiname prisiregistravus! Dabar galite prisijungti.', {
+              toast.success('Sveikiname prisiregistravus! Dabar galite prisijungti.', {
                 timeout: 10000,
               });
               router.push({ name: 'Login' });
