@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <template v-if="isLoading">
         <div>Loading...</div>
       </template>
@@ -55,24 +52,17 @@
 
 <script>
 import { ref, reactive, onMounted, watch, computed } from 'vue';
-import AlertComponent from '../components/Alert.vue';
 import MapComponent from '../components/ParkingSpaceMap.vue';
 import store from '../plugins/store';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     MapComponent,
   },
   setup() {
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
+    const toast = useToast();
     const route = useRoute();
     const router = useRouter();
     const zoneId = ref(route.params.id);
@@ -81,7 +71,6 @@ export default {
     const spaceData = ref(null);
     const mapData = reactive({ loading: false, name: '', paying_time: 0, price: 0, location_polygon: [], information: '', city: '' });
     const fetchData = async () => {
-      alert.show = false;
       try {
         const response = await axios.get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
           headers: {
@@ -110,43 +99,25 @@ export default {
             });
         }
       } catch (error) {
-        console.log(error);
-        alert.show = true;
-        alert.type = 'error';
-        alert.title = 'Klaida!';
-        alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-        alert.timeout = 10000;
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+          timeout: 10000,
+        });
       }
       isLoading.value = false;
     };
 
     onMounted(() => {
       fetchData();
-      updateAlert();
-      watch(() => store.state.alert, updateAlert);
     });
 
-    const updateAlert = () => {
-      const loginAlert = store.state.alert;
-
-      if (loginAlert.show) {
-        alert.show = loginAlert.show;
-        alert.type = loginAlert.type;
-        alert.title = loginAlert.title;
-        alert.text = loginAlert.text;
-        alert.timeout = loginAlert.timeout;
-        store.commit('resetAlert');
-      }
-    };
     const isAdmin = computed(() => {
       return store.getters.isAdmin;
     });
     const addSpace = async () => {
       router.push({ name: 'ParkingSpaceAdd', params: { id: zoneId.value } });
     };
-    
+
     return {
-      alert,
       isLoading,
       zoneData,
       isAdmin,

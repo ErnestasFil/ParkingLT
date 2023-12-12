@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <template v-if="isLoading">
         <div>Loading...</div>
       </template>
@@ -75,16 +72,14 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue';
-import AlertComponent from '../components/Alert.vue';
 import MapComponent from '../components/EditSpaceMap.vue';
 import store from '../plugins/store';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     MapComponent,
   },
   data: () => ({
@@ -121,16 +116,10 @@ export default {
     },
   },
   setup() {
+    const toast = useToast();
     const router = useRouter();
     const color = ref('');
     const route = useRoute();
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
     const isLoading = ref(true);
     const zoneId = ref(route.params.parking_zone);
     const spaceId = ref(route.params.parking_space);
@@ -138,7 +127,6 @@ export default {
     const updateData = reactive({ loading: false, street: '', information: '', space_number: 0, invalid_place: 0, location_polygon: [] });
     const errors = {};
     const fetchData = async () => {
-      alert.show = false;
       try {
         await axios
           .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
@@ -167,15 +155,12 @@ export default {
                     updateData.location_polygon = zoneData.space.location_polygon;
                   }
                 });
-              console.log(updateData);
             }
           });
       } catch (error) {
-        alert.show = true;
-        alert.type = 'error';
-        alert.title = 'Klaida!';
-        alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-        alert.timeout = 10000;
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+          timeout: 10000,
+        });
       }
       isLoading.value = false;
     };
@@ -199,28 +184,20 @@ export default {
           })
           .then((data) => {
             if (data.status === 200) {
-              const updateAlert = {
-                show: true,
-                type: 'success',
-                title: 'Stovėjimo vietos informacija atnaujina!',
-                text: '',
+              toast.success('Stovėjimo vietos informacija atnaujina!', {
                 timeout: 10000,
-              };
-              store.commit('setAlert', updateAlert);
+              });
               router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
             }
           });
       } catch (error) {
-        console.log(error);
-        alert.show = false;
         if (error.response && error.response.status === 422) {
           const info = error.response.data;
           Object.assign(errors, info);
         } else {
-          alert.type = 'error';
-          alert.title = 'Klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.show = true;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       } finally {
         updateData.loading = false;
@@ -228,7 +205,6 @@ export default {
     };
 
     return {
-      alert,
       zoneId,
       zoneData,
       isLoading,

@@ -4,17 +4,18 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { reactive, onMounted } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import axios from 'axios';
-import store from '../plugins/store';
 import ModalMap from './ModalMap.vue';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
     ModalMap,
   },
   setup() {
+    const toast = useToast();
     const data = reactive({
       mapData: {},
       isModalOpen: false,
@@ -38,14 +39,9 @@ export default {
           initializeMap();
         }
       } catch (error) {
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
     });
 

@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <v-card flat>
         <v-card-title class="d-flex align-center pe-2">
           <v-icon icon="mdi-map-marker-question-outline"></v-icon> &nbsp; Parkavimo zonos paieška
@@ -53,26 +50,19 @@
 <script>
 import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
-import AlertComponent from '../components/Alert.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
 import store from '../plugins/store';
 export default {
   components: {
-    AlertComponent,
     ConfirmModal,
   },
   setup() {
+    const toast = useToast();
     const confirmModalRef = ref(null);
     const data = reactive({
       zoneData: [],
-    });
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
     });
     const router = useRouter();
     const isAdmin = computed(() => {
@@ -98,14 +88,11 @@ export default {
 
         if (response.status === 200) {
           data.zoneData = response.data;
-          console.log(data.zoneData);
         }
       } catch (error) {
-        alert.show = true;
-        alert.type = 'error';
-        alert.title = 'Klaida!';
-        alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-        alert.timeout = 10000;
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+          timeout: 10000,
+        });
       }
     });
 
@@ -116,7 +103,6 @@ export default {
     const deleteItem = async (zoneId, name) => {
       const confirmation = await confirmModalRef.value.open('Parkavimo zonos pašalinimas', 'Ar tikrai norite pašalinti parkavimosi zoną - ' + name + ' ir visą su ja susijusią informaciją?');
       if (confirmation) {
-        alert.show = false;
         try {
           console.log(store.state.login.token);
           const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zoneId}`, {
@@ -128,31 +114,24 @@ export default {
           });
 
           if (response.status === 204) {
-            alert.show = true;
-            alert.type = 'success';
-            alert.title = 'Pašalinta!';
-            alert.text = 'Parkavimosi zona pašalinta sėkmingai!';
-            alert.timeout = 10000;
+            toast.error('Parkavimosi zona pašalinta sėkmingai!', {
+              timeout: 10000,
+            });
             data.zoneData = data.zoneData.filter((item) => item.id !== zoneId);
           }
         } catch (error) {
-          console.log(error);
-          alert.show = true;
-          alert.type = 'error';
-          alert.title = 'Šalinimo klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.timeout = 10000;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       }
     };
 
     const editItem = (zoneId) => {
       router.push({ name: 'EditParkingZone', params: { id: zoneId } });
-      console.log(`Edit ${zoneId}`);
     };
 
     return {
-      alert,
       data,
       tableHeaders,
       goToZone,

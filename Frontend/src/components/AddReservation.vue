@@ -86,7 +86,7 @@
 
 <script>
 import store from '../plugins/store';
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 export default {
   data() {

@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <v-card max-width="600" class="mx-auto text-center" title="Registracija">
         <v-form @submit.prevent="register">
           <v-text-field v-model="data.name" label="Vardas" :error-messages="errors.name"></v-text-field>
@@ -19,32 +16,22 @@
   </v-container>
 </template>
 <script>
-import { ref, reactive } from 'vue';
+import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import AlertComponent from '../components/Alert.vue';
 import 'flag-icons/css/flag-icons.min.css';
 import 'v-phone-input/dist/v-phone-input.css';
 import { VPhoneInput } from 'v-phone-input';
 import store from '../plugins/store';
-
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     VPhoneInput,
   },
   setup() {
     const data = reactive({ loading: false, name: '', surname: '', email: '', phone: '', phone_country: '', password: '', password_confirmation: '' });
     const errors = {};
     const router = useRouter();
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
-
     const register = async () => {
       try {
         data.loading = true;
@@ -59,27 +46,20 @@ export default {
           })
           .then((data) => {
             if (data.status === 201) {
-              const loginAlert = {
-                show: true,
-                type: 'success',
-                title: 'Registracija sėkminga!',
-                text: 'Sveikiname prisiregistravus! Dabar galite prisijungti.',
+              toast.error('Sveikiname prisiregistravus! Dabar galite prisijungti.', {
                 timeout: 10000,
-              };
-              store.commit('setAlert', loginAlert);
+              });
               router.push({ name: 'Login' });
             }
           });
       } catch (error) {
-        alert.show = false;
         if (error.response && error.response.status === 422) {
           const info = error.response.data;
           Object.assign(errors, info);
         } else {
-          alert.type = 'error';
-          alert.title = 'Registracijos klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.show = true;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       } finally {
         data.loading = false;
@@ -92,7 +72,6 @@ export default {
       data,
       register,
       errors,
-      alert,
       onCountryUpdate,
     };
   },

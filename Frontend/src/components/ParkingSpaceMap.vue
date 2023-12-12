@@ -12,6 +12,7 @@ import ModalMap from './ModalSpace.vue';
 import store from '../plugins/store';
 import axios from 'axios';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
     ModalMap,
@@ -26,9 +27,9 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const toast = useToast();
     const confirmModalRef = ref(null);
     let map = null;
-    let draw = null;
     const zone = props.zoneData;
     let space = props.spaceData;
     const data = reactive({
@@ -192,15 +193,9 @@ export default {
             }
           });
       } catch (error) {
-        console.log(error);
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
     };
     function isParkingSpaceFree(reservationData) {
@@ -237,15 +232,9 @@ export default {
           });
 
           if (response.status === 204) {
-            const alert = {
-              show: true,
-              type: 'success',
-              title: 'Pašalinta!',
-              text: 'Stovėjimo vieta pašalinta sėkmingai!',
+            toast.error('Stovėjimo vieta pašalinta sėkmingai!', {
               timeout: 10000,
-            };
-            store.commit('setAlert', alert);
-
+            });
             space = space.filter((spaceItem) => spaceItem.id !== spaceId);
             const layerId = `parkingSpace-${spaceId}`;
             const sourceId = layerId;
@@ -254,15 +243,9 @@ export default {
             map.removeSource(sourceId);
           }
         } catch (error) {
-          console.log(error);
-          const alert = {
-            show: true,
-            type: 'error',
-            title: 'Šalinimo klaida!',
-            text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
             timeout: 10000,
-          };
-          store.commit('setAlert', alert);
+          });
         }
       }
     };

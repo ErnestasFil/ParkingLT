@@ -1,10 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
-
       <v-card flat>
         <v-card-title class="d-flex align-center pe-2">
           <v-icon icon=" mdi-parking"></v-icon> &nbsp; Rezervacijos
@@ -81,22 +77,22 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
-import AlertComponent from '../components/Alert.vue';
 import InfoModal from '../components/ModalUserReservationInfo.vue';
 import EditModal from '../components/EditReservation.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { useRoute } from 'vue-router';
 import store from '../plugins/store';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     InfoModal,
     EditModal,
     ConfirmModal,
   },
   setup() {
+    const toast = useToast();
     const confirmModalRef = ref(null);
     const informationRef = ref(null);
     const editRef = ref(null);
@@ -105,13 +101,6 @@ export default {
     const isLoading = ref(true);
     const data = reactive({
       reservations: [],
-    });
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
     });
     const tableHeaders = reactive([
       { title: 'Vartotojo el. paštas', key: 'fk_UserEmail' },
@@ -126,7 +115,6 @@ export default {
     ]);
 
     onMounted(async () => {
-      alert.show = false;
       try {
         axios
           .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
@@ -147,19 +135,15 @@ export default {
                   reservation.fk_Privilegeid = 'Ne';
                 }
               });
-              console.log(data);
             }
           });
         setTimeout(() => {
           isLoading.value = false;
         }, 2000);
       } catch (error) {
-        console.log(error);
-        alert.show = true;
-        alert.type = 'error';
-        alert.title = 'Klaida!';
-        alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-        alert.timeout = 10000;
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+          timeout: 10000,
+        });
       }
     });
     const editItem = async (reservationId, spaceId, zoneId) => {
@@ -171,18 +155,15 @@ export default {
           data.reservations[index].date_until = confirmation.until;
           data.reservations[index].price = confirmation.price;
         }
-        console.log(confirmation);
       }
     };
     const openInfo = (reservationId, spaceId, zoneId, user) => {
       informationRef.value.open(reservationId, spaceId, zoneId, user);
-      console.log(`Info ${reservationId}`);
     };
     const deleteInfo = async (reservationId, spaceId, zoneId) => {
       const confirmation = await confirmModalRef.value.open('Rezervacijos šalinimas', 'Ar tikrai norite pašalinti šią reservaziją?');
       if (confirmation) {
         try {
-          console.log(store.state.login.token);
           const response = await axios.delete(`${process.env.APP_URL}/parking_zone/${zoneId}/parking_space/${spaceId}/reservation/${reservationId}`, {
             headers: {
               'Content-Type': 'application/json',
@@ -192,27 +173,15 @@ export default {
           });
 
           if (response.status === 204) {
-            const alert = {
-              show: true,
-              type: 'success',
-              title: 'Pašalinta!',
-              text: 'Rezervacija pašalinta sėkmingai!',
+            toast.success('Rezervacija pašalinta sėkmingai!', {
               timeout: 10000,
-            };
-            store.commit('setAlert', alert);
-
+            });
             data.reservations = data.reservations.filter((reserv) => reserv.id !== reservationId);
           }
         } catch (error) {
-          console.log(error);
-          const alert = {
-            show: true,
-            type: 'error',
-            title: 'Šalinimo klaida!',
-            text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
             timeout: 10000,
-          };
-          store.commit('setAlert', alert);
+          });
         }
       }
     };
@@ -220,25 +189,7 @@ export default {
     const getColor = (isEnded) => {
       return isEnded === 'Pasibaigusi' ? 'red' : 'green';
     };
-    onMounted(() => {
-      updateAlert();
-      watch(() => store.state.alert, updateAlert);
-    });
-
-    const updateAlert = () => {
-      const loginAlert = store.state.alert;
-
-      if (loginAlert.show) {
-        alert.show = loginAlert.show;
-        alert.type = loginAlert.type;
-        alert.title = loginAlert.title;
-        alert.text = loginAlert.text;
-        alert.timeout = loginAlert.timeout;
-        store.commit('resetAlert');
-      }
-    };
     return {
-      alert,
       data,
       tableHeaders,
       informationRef,

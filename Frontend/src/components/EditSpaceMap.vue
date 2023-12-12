@@ -9,6 +9,7 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import axios from 'axios';
 import store from '../plugins/store';
+import { useToast } from 'vue-toastification';
 export default {
   props: {
     zoneData: {
@@ -16,6 +17,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const toast = useToast();
     mapboxgl.accessToken = process.env.MAP_BOX;
     let map = null;
     let draw = null;
@@ -97,44 +99,43 @@ export default {
       });
     };
     const addParkingZoneLayer = () => {
-        const layerId = `parkingZone`;
-        const switchedCoordinates = props.zoneData.zone.location_polygon.map(([lng, lat]) => [lat, lng]);
-        map.addSource(layerId, {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'Polygon',
-              coordinates: [switchedCoordinates],
-            },
-            properties: {
-              zoneData: props.zoneData.zone,
-            },
+      const layerId = `parkingZone`;
+      const switchedCoordinates = props.zoneData.zone.location_polygon.map(([lng, lat]) => [lat, lng]);
+      map.addSource(layerId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [switchedCoordinates],
           },
-        });
+          properties: {
+            zoneData: props.zoneData.zone,
+          },
+        },
+      });
 
-        map.addLayer({
-          id: layerId,
-          type: 'fill',
-          source: layerId,
-          layout: {},
-          paint: {
-            'fill-color': '#c8e9f7',
-            'fill-opacity': 0.3,
-          },
-        });
+      map.addLayer({
+        id: layerId,
+        type: 'fill',
+        source: layerId,
+        layout: {},
+        paint: {
+          'fill-color': '#c8e9f7',
+          'fill-opacity': 0.3,
+        },
+      });
 
-        map.addLayer({
-          id: `${layerId}-outline`,
-          type: 'line',
-          source: layerId,
-          layout: {},
-          paint: {
-            'line-color': '#000',
-            'line-width': 1,
-          },
-        });
-     
+      map.addLayer({
+        id: `${layerId}-outline`,
+        type: 'line',
+        source: layerId,
+        layout: {},
+        paint: {
+          'line-color': '#000',
+          'line-width': 1,
+        },
+      });
     };
     const initializeDraw = () => {
       draw = new MapboxDraw({
@@ -167,7 +168,7 @@ export default {
         const switched = newPolygon.map(([lat, lng]) => [lng, lat]);
         console.log('Updated Zone Polygon:', switched);
         emit('updatePolygon', switched);
-      } 
+      }
     };
 
     onMounted(async () => {
@@ -184,21 +185,15 @@ export default {
           initializeMap();
         }
       } catch (error) {
-        console.log(error);
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
     });
 
     watch(
       () => props.zoneData,
-      (newVal, oldVal) => {
+      () => {
         initializeMap();
       }
     );

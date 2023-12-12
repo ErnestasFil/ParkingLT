@@ -79,10 +79,11 @@
 
 <script>
 import store from '../plugins/store';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import ModalReservation from './AddReservation.vue';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
     ModalReservation,
@@ -125,6 +126,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const toast = useToast();
     const confirmModalRef = ref(null);
     let time = 0;
     const isAuthenticated = computed(() => {
@@ -156,37 +158,20 @@ export default {
           )
           .then((data) => {
             if (data.status === 201) {
-              const createAlert = {
-                show: true,
-                type: 'success',
-                title: 'Rezervacija pridėta!',
-                text: '',
+              toast.success('Rezervacija pridėta!', {
                 timeout: 10000,
-              };
-              store.commit('setAlert', createAlert);
+              });
             }
           })
           .catch((error) => {
-            console.log(error);
-            alert.show = false;
             if (error.response && error.response.status === 422) {
-              const alert = {
-                show: true,
-                type: 'error',
-                title: 'Klaida!',
-                text: error.response.data.time[0],
+              toast.error(error.response.data.time[0], {
                 timeout: 10000,
-              };
-              store.commit('setAlert', alert);
+              });
             } else {
-              const alert = {
-                show: true,
-                type: 'error',
-                title: 'Klaida!',
-                text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
                 timeout: 10000,
-              };
-              store.commit('setAlert', alert);
+              });
             }
           });
       }

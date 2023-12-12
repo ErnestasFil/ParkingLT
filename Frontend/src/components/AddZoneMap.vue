@@ -7,8 +7,8 @@ import { onMounted, reactive } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import store from '../plugins/store';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 export default {
   props: {
     zoneData: {
@@ -16,6 +16,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const toast = useToast();
     let draw = null;
     mapboxgl.accessToken = process.env.MAP_BOX;
 
@@ -37,15 +38,9 @@ export default {
           initializeMap();
         }
       } catch (error) {
-        console.log(error);
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
     });
     const initializeMap = () => {

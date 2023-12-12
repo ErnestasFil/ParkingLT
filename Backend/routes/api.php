@@ -50,7 +50,7 @@ Route::prefix('V1')->group(function () {
 
     Route::get('/user', [UserController::class, 'index'])->name('index')->middleware('auth:api', 'can:viewAny,App\Models\User');
     Route::get('/user/{user}', [UserController::class, 'show'])->name('show')->middleware('auth:api', 'can:view,user');
-    Route::patch('/user/{user}', [UserController::class, 'update'])->name('update')->middleware('jsonFormat', 'auth:api', 'can:update,user');
+    Route::put('/user/{user}', [UserController::class, 'update'])->name('update')->middleware('jsonFormat', 'auth:api', 'can:update,user');
     Route::delete('/user/{user}', [UserController::class, 'destroy'])->name('destroy')->middleware('jsonFormat', 'auth:api', 'can:delete,user');
     Route::prefix('/user/{user}')->group(function () {
         Route::get('/reservation', [ReservationController::class, 'indexAll'])->name('indexAll')->middleware('auth:api', 'can:viewAnyReservation,user');

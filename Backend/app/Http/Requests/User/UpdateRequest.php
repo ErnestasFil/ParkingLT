@@ -67,6 +67,10 @@ class UpdateRequest extends FormRequest
             $this->offsetUnset('password');
             $this->offsetUnset('password_confirmation');
         }
+        $this->offsetUnset('email');
+        $this->offsetUnset('role');
+        $this->offsetUnset('balance');
+        $this->offsetUnset('id');
     }
     protected function passedValidation()
     {

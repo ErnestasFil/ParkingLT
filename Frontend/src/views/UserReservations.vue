@@ -1,10 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
-
       <v-card flat>
         <v-card-title class="d-flex align-center pe-2">
           <v-icon icon=" mdi-parking"></v-icon> &nbsp; Rezervacijos
@@ -70,20 +66,20 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed, watch } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import axios from 'axios';
-import AlertComponent from '../components/Alert.vue';
 import InfoModal from '../components/ModalReservationInfo.vue';
 import EditModal from '../components/EditReservation.vue';
 import { useRoute } from 'vue-router';
 import store from '../plugins/store';
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     InfoModal,
     EditModal,
   },
   setup() {
+    const toast = useToast();
     const informationRef = ref(null);
     const editRef = ref(null);
     const route = useRoute();
@@ -91,13 +87,6 @@ export default {
     const isLoading = ref(true);
     const data = reactive({
       reservations: [],
-    });
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
     });
     const tableHeaders = reactive([
       { title: 'Pradžios laikas', key: 'data_from' },
@@ -110,7 +99,6 @@ export default {
     ]);
 
     onMounted(async () => {
-      alert.show = false;
       try {
         axios
           .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
@@ -131,19 +119,15 @@ export default {
                   reservation.fk_Privilegeid = 'Ne';
                 }
               });
-              console.log(data);
             }
           });
         setTimeout(() => {
           isLoading.value = false;
         }, 2000);
       } catch (error) {
-        console.log(error);
-        alert.show = true;
-        alert.type = 'error';
-        alert.title = 'Klaida!';
-        alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-        alert.timeout = 10000;
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+          timeout: 10000,
+        });
       }
     });
     const editItem = async (reservationId, spaceId, zoneId) => {
@@ -155,36 +139,17 @@ export default {
           data.reservations[index].date_until = confirmation.until;
           data.reservations[index].price = confirmation.price;
         }
-        console.log(confirmation);
       }
     };
     const openInfo = (reservationId, spaceId, zoneId) => {
       informationRef.value.open(reservationId, spaceId, zoneId);
-      console.log(`Info ${reservationId}`);
     };
 
     const getColor = (isEnded) => {
       return isEnded === 'Pasibaigusi' ? 'red' : 'green';
     };
-    onMounted(() => {
-      updateAlert();
-      watch(() => store.state.alert, updateAlert);
-    });
 
-    const updateAlert = () => {
-      const loginAlert = store.state.alert;
-
-      if (loginAlert.show) {
-        alert.show = loginAlert.show;
-        alert.type = loginAlert.type;
-        alert.title = loginAlert.title;
-        alert.text = loginAlert.text;
-        alert.timeout = loginAlert.timeout;
-        store.commit('resetAlert');
-      }
-    };
     return {
-      alert,
       data,
       tableHeaders,
       informationRef,

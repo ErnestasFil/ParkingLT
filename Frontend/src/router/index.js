@@ -11,7 +11,9 @@ import ParkingSpaceAdd from '../views/ParkingSpaceAdd';
 import EditParkingSpace from '../views/EditParkingSpace';
 import Reservation from '../views/Reservation';
 import UserReservations from '../views/UserReservations';
-import AllReservations from '../views/reservations';
+import AllReservations from '../views/Reservations';
+import Users from '../views/Users';
+import Profile from '../views/Profile';
 const routes = [
   {
     path: '/',
@@ -150,6 +152,30 @@ const routes = [
         path: '',
         name: 'AllReservations',
         component: AllReservations,
+      },
+    ],
+  },
+  {
+    path: '/users',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'Users',
+        component: Users,
+      },
+    ],
+  },
+  {
+    path: '/user/:id',
+    component: Default,
+    props: true,
+    children: [
+      {
+        path: '',
+        name: 'Profile',
+        component: Profile,
       },
     ],
   },

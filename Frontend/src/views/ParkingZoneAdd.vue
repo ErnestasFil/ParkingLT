@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <template v-if="true">
         <v-form @submit.prevent="create">
           <v-row no-gutters>
@@ -57,16 +54,15 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch } from 'vue';
-import AlertComponent from '../components/Alert.vue';
+import { ref, reactive } from 'vue';
 import MapComponent from '../components/AddZoneMap.vue';
 import store from '../plugins/store';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 export default {
   components: {
-    AlertComponent,
     MapComponent,
   },
   data: () => ({
@@ -103,15 +99,9 @@ export default {
     },
   },
   setup() {
+    const toast = useToast();
     const router = useRouter();
     const color = ref('');
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
     const zoneData = reactive({ loading: false, name: '', colour: '#000000', paying_time: 0, price: 0, location_polygon: [], information: '', city: '' });
     const errors = {};
 
@@ -131,41 +121,31 @@ export default {
           })
           .then((data) => {
             if (data.status === 201) {
-              const createAlert = {
-                show: true,
-                type: 'success',
-                title: 'Parkavimosi zona pridėtą!',
-                text: '',
+              toast.error('Parkavimosi zona pridėtą!', {
                 timeout: 10000,
-              };
-              store.commit('setAlert', createAlert);
+              });
               router.push({ name: 'Home' });
             }
           });
       } catch (error) {
-        console.log(error);
-        alert.show = false;
         if (error.response && error.response.status === 422) {
           const info = error.response.data;
           if (info.location_polygon) {
-            alert.type = 'error';
-            alert.title = 'Klaida!';
-            alert.text = info.location_polygon[0];
-            alert.show = true;
+            toast.error(info.location_polygon[0], {
+              timeout: 10000,
+            });
           }
           Object.assign(errors, info);
         } else {
-          alert.type = 'error';
-          alert.title = 'Klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.show = true;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       } finally {
         zoneData.loading = false;
       }
     };
     return {
-      alert,
       zoneData,
       errors,
       color,

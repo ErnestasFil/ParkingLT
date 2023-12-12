@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $primaryKey = 'id';
     protected $table = 'user';
@@ -24,6 +24,7 @@ class User extends Authenticatable implements JWTSubject
         'balance',
         'role'
     ];
+
     protected $hidden = [
         'password'
     ];

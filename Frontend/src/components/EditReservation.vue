@@ -94,10 +94,12 @@
 
 <script>
 import store from '../plugins/store';
-import { watch, onMounted, ref, reactive } from 'vue';
+import { watch, onMounted, reactive } from 'vue';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 export default {
   setup() {
+    const toast = useToast();
     const data = reactive({ opened: false, reservationId: 0, spaceId: 0, zoneId: 0, resolve: null, reject: null, isLoading: true });
     const fullData = reactive({ zone: {}, space: {}, reservation: {} });
     const timeSelect = reactive({
@@ -169,17 +171,10 @@ export default {
         setTimeout(() => {
           data.isLoading = false;
         }, 1500);
-        console.log(fullData);
       } catch (error) {
-        console.log(error);
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
       return new Promise((resolve, reject) => {
         data.resolve = resolve;
@@ -210,37 +205,21 @@ export default {
         if (reservationUp.status === 200) {
           updatedData.price = reservationUp.data.price;
           updatedData.until = reservationUp.data.date_until;
-          const alert = {
-            show: true,
-            type: 'success',
-            title: 'Rezervacijos informacija atnaujinta!',
-            text: '',
+          toast.success('Rezervacijos informacija atnaujinta!', {
             timeout: 10000,
-          };
-          store.commit('setAlert', alert);
+          });
           data.resolve(updatedData);
           data.opened = false;
         }
       } catch (error) {
         if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          const alert = {
-            show: true,
-            type: 'error',
-            title: 'Klaida!',
-            text: error.response.data.time[0],
+          toast.error(error.response.data.time[0], {
             timeout: 10000,
-          };
-          store.commit('setAlert', alert);
+          });
         } else {
-          const alert = {
-            show: true,
-            type: 'error',
-            title: 'Klaida!',
-            text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
             timeout: 10000,
-          };
-          store.commit('setAlert', alert);
+          });
         }
         data.resolve(false);
         data.opened = false;

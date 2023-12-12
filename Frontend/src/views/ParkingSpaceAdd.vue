@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <template v-if="true">
         <v-form @submit.prevent="create">
           <v-row no-gutters>
@@ -37,15 +34,13 @@
 
 <script>
 import { ref, reactive } from 'vue';
-import AlertComponent from '../components/Alert.vue';
 import MapComponent from '../components/AddSpaceMap.vue';
 import store from '../plugins/store';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
-
+import { useToast } from 'vue-toastification';
 export default {
   components: {
-    AlertComponent,
     MapComponent,
   },
 
@@ -54,15 +49,9 @@ export default {
       this.zoneData.location_polygon = newPolygon;
     },
   },
-  setup(props, { emit }) {
+  setup() {
+    const toast = useToast();
     const route = useRoute();
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
     const zoneId = ref(route.params.id);
     let zoneData = reactive({ loading: false, space_number: 0, invalid_place: 0, street: '', location_polygon: [], information: '' });
     const errors = {};
@@ -70,7 +59,6 @@ export default {
     const create = async () => {
       newData.data = null;
       try {
-        alert.show = false;
         Object.keys(errors).forEach((key) => delete errors[key]);
         zoneData.loading = true;
         await axios
@@ -83,41 +71,32 @@ export default {
           })
           .then((data) => {
             if (data.status === 201) {
-              alert.show = true;
-              alert.type = 'success';
-              alert.title = 'Stovėjimo vieta pridėtą!';
-              alert.text = '';
-              alert.timeout = 10000;
+              toast.success('Stovėjimo vieta pridėtą!', {
+                timeout: 10000,
+              });
               newData.data = { ...zoneData };
-              //newData = 'hfcxh';
-
               zoneData.space_number++;
             }
           });
       } catch (error) {
-        console.log(error);
-        alert.show = false;
         if (error.response && error.response.status === 422) {
           const info = error.response.data;
           if (info.location_polygon) {
-            alert.type = 'error';
-            alert.title = 'Klaida!';
-            alert.text = info.location_polygon[0];
-            alert.show = true;
+            toast.error(info.location_polygon[0], {
+              timeout: 10000,
+            });
           }
           Object.assign(errors, info);
         } else {
-          alert.type = 'error';
-          alert.title = 'Klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.show = true;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       } finally {
         zoneData.loading = false;
       }
     };
     return {
-      alert,
       zoneData,
       errors,
       create,

@@ -3,13 +3,6 @@ import VueJwtDecode from 'vue-jwt-decode';
 
 const store = createStore({
   state: {
-    alert: {
-      show: false,
-      type: '',
-      title: '',
-      text: '',
-      timeout: 0,
-    },
     login: {
       token: localStorage.getItem('token') || undefined,
       exp: undefined,
@@ -19,18 +12,6 @@ const store = createStore({
     },
   },
   mutations: {
-    setAlert(state, alert) {
-      state.alert = alert;
-    },
-    resetAlert(state) {
-      state.alert = {
-        show: false,
-        type: '',
-        title: '',
-        text: '',
-        timeout: 0,
-      };
-    },
     jwt(state, data) {
       state.login = data;
       localStorage.setItem('token', data.token);
@@ -48,15 +29,24 @@ const store = createStore({
       } else {
         localStorage.removeItem('token');
         state.login = {
-          token: undefined,
-          exp: undefined,
-          sub: undefined,
-          email: undefined,
-          role: undefined,
+          token: '',
+          exp: 0,
+          sub: 0,
+          email: '',
+          role: '',
         };
       }
     },
-    
+    removeUserData(state) {
+      localStorage.removeItem('token');
+      state.login = {
+        token: '',
+        exp: 0,
+        sub: 0,
+        email: '',
+        role: '',
+      };
+    },
   },
   getters: {
     isAuthenticated: (state) => !!state.login.token,

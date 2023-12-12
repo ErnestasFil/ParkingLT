@@ -74,7 +74,11 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->delete();
-        Auth::invalidate();
+        $token = JWTAuth::parseToken()->getPayload();
+        $sub = $token->get('sub');
+        if ($user->id == $sub) {
+            Auth::invalidate();
+        }
         return response('', 204);
     }
 }

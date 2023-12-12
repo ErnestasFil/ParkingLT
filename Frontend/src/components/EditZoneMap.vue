@@ -3,12 +3,13 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, watch } from 'vue';
+import { reactive, onMounted, watch } from 'vue';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import axios from 'axios';
 import store from '../plugins/store';
+import { useToast } from 'vue-toastification';
 export default {
   props: {
     zoneData: {
@@ -16,6 +17,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const toast = useToast();
     let map = null;
     let draw = null;
     const data = reactive({
@@ -127,8 +129,6 @@ export default {
         const switched = newPolygon.map(([lat, lng]) => [lng, lat]);
         console.log('Updated Zone Polygon:', switched);
         emit('updatePolygon', switched);
-      } else {
-        if (e.type !== 'draw.delete') alert('Click the map to draw a polygon.');
       }
     };
 
@@ -146,15 +146,9 @@ export default {
           initializeMap();
         }
       } catch (error) {
-        console.log(error);
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
     });
 

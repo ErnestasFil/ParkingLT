@@ -70,8 +70,10 @@ import store from '../plugins/store';
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 export default {
   setup() {
+    const toast = useToast();
     const data = reactive({ opened: false, reservationId: 0, spaceId: 0, zoneId: 0, userData: '', resolve: null, reject: null, isLoading: true });
     const router = useRouter();
     const fullData = reactive({ zone: {}, space: {}, reservation: {} });
@@ -124,18 +126,10 @@ export default {
         setTimeout(() => {
           data.isLoading = false;
         }, 1500);
-        console.log(fullData);
       } catch (error) {
-        console.log(error);
-
-        const alert = {
-          show: true,
-          type: 'error',
-          title: 'Klaida!',
-          text: error.response ? error.response.data.message : 'Nenumatyta klaida',
+        toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
           timeout: 10000,
-        };
-        store.commit('setAlert', alert);
+        });
       }
       return new Promise((resolve, reject) => {
         data.resolve = resolve;

@@ -1,9 +1,6 @@
 <template>
   <v-container class="fill-height">
     <v-responsive class="align-center fill-height">
-      <AlertComponent :show="alert.show" :type="alert.type" :title="alert.title" :text="alert.text" :timeout="alert.timeout"></AlertComponent>
-
-      <v-snackbar v-model="alert.show" :timeout="alert.timeout" variant="plain" origin="auto" position="fixed" class="mb-6 mx-auto" max-width="auto"> </v-snackbar>
       <v-card max-width="600" class="mx-auto text-center" title="Prisijungimas">
         <v-form @submit.prevent="login">
           <v-text-field v-model="data.email" label="El. paštas" :error-messages="errors.email"></v-text-field>
@@ -16,28 +13,18 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
+import { reactive } from 'vue';
 import axios from 'axios';
-import AlertComponent from '../components/Alert.vue';
 import store from '../plugins/store';
 import VueJwtDecode from 'vue-jwt-decode';
 import { useRouter } from 'vue-router';
-
+import { useToast } from 'vue-toastification';
 export default {
-  components: {
-    AlertComponent,
-  },
   setup() {
+    const toast = useToast();
     const data = reactive({ loading: false, email: '', password: '' });
     const errors = {};
     const router = useRouter();
-    const alert = reactive({
-      show: false,
-      type: 'error',
-      title: '',
-      text: '',
-      timeout: 10000,
-    });
 
     const login = async () => {
       try {
@@ -63,49 +50,31 @@ export default {
               };
 
               store.commit('jwt', token);
-              const loginAlert = {
-                show: true,
-                type: 'success',
-                title: info.message,
-                text: '',
+              console.log(store.state.login);
+              toast.success(info.message, {
                 timeout: 10000,
-              };
-              store.commit('setAlert', loginAlert);
+              });
               router.push({ name: 'Home' });
             }
           });
       } catch (error) {
-        alert.show = false;
         if (error.response && error.response.status === 422) {
           const info = error.response.data;
           Object.assign(errors, info);
         } else {
-          alert.type = 'error';
-          alert.title = 'Prisijungimo klaida!';
-          alert.text = error.response ? error.response.data.message : 'Nenumatyta klaida';
-          alert.show = true;
+          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
+            timeout: 10000,
+          });
         }
       } finally {
         data.loading = false;
       }
     };
-    onMounted(() => {
-      const loginAlert = store.state.alert;
 
-      if (loginAlert.show) {
-        alert.show = loginAlert.show;
-        alert.type = loginAlert.type;
-        alert.title = loginAlert.title;
-        alert.text = loginAlert.text;
-        alert.timeout = loginAlert.timeout;
-        store.commit('resetAlert');
-      }
-    });
     return {
       data,
       errors,
       login,
-      alert,
     };
   },
 };

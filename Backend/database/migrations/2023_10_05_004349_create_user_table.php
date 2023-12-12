@@ -22,7 +22,6 @@ return new class extends Migration
             $table->text('password');
             $table->double('balance');
             $table->integer('role')->index('role');
-            $table->softDeletes();
         });
     }
 
