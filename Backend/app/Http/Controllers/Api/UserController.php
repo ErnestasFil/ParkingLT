@@ -25,13 +25,13 @@ class UserController extends Controller
     }
     public function login(LoginRequest $request)
     {
-        JWTAuth::factory()->setTTL(1);
+        JWTAuth::factory()->setTTL(20);
         $token = JWTAuth::attempt([
             "email" => $request->email,
             "password" => $request->password
         ]);
         if (!empty($token)) {
-            $expiresAt = Carbon::now()->addMinutes(1)->toDateTimeString();
+            $expiresAt = Carbon::now()->addMinutes(20)->toDateTimeString();
             return response(['message' => 'Prisijungta sėkmingai!', 'access_token' => $token, 'token_type' => 'bearer', 'expires_in' => $expiresAt], 200);
         }
         return response(['message' => 'Blogi prisijungimo duomenys!'], 401);
@@ -43,14 +43,14 @@ class UserController extends Controller
             throw new BadRequestException('Žetonas nenurodytas!');
         }
         try {
-            JWTAuth::factory()->setTTL(1);
+            JWTAuth::factory()->setTTL(20);
             $token = JWTAuth::claims(["aud" => env('JWT_AUDIENCE', 'default')])->refresh(false, false);
         } catch (TokenInvalidException $e) {
             throw new AccessDeniedHttpException('Neteisingas žetonas!');
         } catch (\Exception $e) {
             return response(['message' => $e->getMessage()], 401);
         }
-        $expiresAt = Carbon::now()->addMinutes(1)->toDateTimeString();
+        $expiresAt = Carbon::now()->addMinutes(20)->toDateTimeString();
         return response(['message' => 'Žetonas atnaujintas', 'token' => $token, 'token_type' => 'bearer', 'expires_in' => $expiresAt], 200);
     }
     public function logout()

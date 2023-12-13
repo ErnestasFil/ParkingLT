@@ -5,15 +5,15 @@
       <template v-if="true">
         <v-form @submit.prevent="create">
           <v-row no-gutters>
-            <v-col cols="9">
+            <v-col cols="12" xl="9">
               <v-sheet class="pa-2 ma-2"> <MapComponent :zoneId="zoneId" :zoneData="newData.data" @update:zoneData="newData.data = $event" @createPolygon="handleCreatePolygon"></MapComponent> </v-sheet>
             </v-col>
 
-            <v-col>
+            <v-col cols="12" xl="3">
               <v-sheet class="pa-2 ma-2">
                 <v-toolbar>
                   <v-card-title>
-                    <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi vietos pridėjimas</b> </span>
+                    <span class="text"> <span class="mdi mdi-map"></span> <b>Parkavimosi vietos pridėjimas</b> </span>
                   </v-card-title>
                 </v-toolbar>
                 <v-card-text>
@@ -64,7 +64,6 @@ export default {
     let newData = reactive({ data: null });
     const create = async () => {
       newData.data = null;
-
       Object.keys(errors).forEach((key) => delete errors[key]);
       zoneData.loading = true;
       await axios
@@ -112,22 +111,26 @@ export default {
                     zoneData.space_number++;
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  if (error.response && error.response.status === 422) {
+                    const info = error.response.data;
+                    if (info.location_polygon) {
+                      toast.error(info.location_polygon[0], {
+                        timeout: 10000,
+                      });
+                    }
+                    Object.assign(errors, info);
+                  } else {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  }
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       zoneData.loading = false;

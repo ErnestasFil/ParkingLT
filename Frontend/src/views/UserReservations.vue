@@ -79,6 +79,7 @@ export default {
     InfoModal,
     EditModal,
   },
+  props: ['id'],
   setup() {
     const toast = useToast();
     const informationRef = ref(null);
@@ -101,6 +102,12 @@ export default {
     ]);
 
     onMounted(async () => {
+      if (Number(route.params.id) !== Number(store.state.login.sub)) {
+        toast.error('Prieiga negalima!', {
+          timeout: 10000,
+        });
+        router.push({ name: 'Home' });
+      }
       await axios
         .get(`${process.env.APP_URL}/user/${userId.value}/reservation`, {
           headers: {
@@ -146,22 +153,16 @@ export default {
                     });
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  refresh.error403(error, router);
+                  refresh.error404(error, router);
+                  refresh.errorOther(error, router);
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       setTimeout(() => {

@@ -1,10 +1,10 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="data.opened" min-width="600" max-width="900" @keydown.esc="cancel">
+    <v-dialog v-model="data.opened" max-width="900" @keydown.esc="cancel">
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-account-key"></span> <b>Vartotojo informacijos redagavimas</b> </span>
+            <span class="text"> <span class="mdi mdi-account-key"></span> <b>Vartotojo informacijos redagavimas</b> </span>
           </v-card-title>
         </v-toolbar>
         <template v-if="data.isLoading">
@@ -12,7 +12,7 @@
         </template>
         <template v-else>
           <v-row no-gutters>
-            <v-col cols="6">
+            <v-col cols="12" xl="6">
               <v-sheet class="pa-2 ma-2"
                 ><v-card-text>
                   <v-alert border="start" variant="tonal" title="Vartotojo informacija"></v-alert>
@@ -48,7 +48,7 @@
               </v-sheet>
             </v-col>
 
-            <v-col cols="6">
+            <v-col cols="12" xl="6">
               <v-sheet class="pa-2 ma-2">
                 <v-form @submit.prevent="edit">
                   <v-card-text>
@@ -121,7 +121,6 @@ export default {
       dataSend.name = '';
       dataSend.surname = '';
       dataSend.phone = '';
-
       axios
         .get(`${process.env.APP_URL}/user/${data.userId}`, {
           headers: {
@@ -171,22 +170,16 @@ export default {
                     dataSend.phone = fullData.user.phone;
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  refresh.error403(error, router);
+                  refresh.error404(error, router);
+                  refresh.errorOther(error, router);
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       setTimeout(() => {
@@ -247,22 +240,21 @@ export default {
                     data.opened = false;
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  if (error.response && error.response.status === 422) {
+                    const info = error.response.data;
+                    Object.assign(errors, info);
+                  } else {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  }
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       data.loading = false;

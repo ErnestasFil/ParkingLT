@@ -1,7 +1,9 @@
 <template>
   <Loader v-if="data.overlay" />
   <div id="map"></div>
-  <ModalMap :show="dataModal.show" :fullData="dataModal.fullData" @update:show="dataModal.show = $event" @modalClosed="handleModalClosed" />
+  <template>
+    <ModalMap :show="dataModal.show" :fullData="dataModal.fullData" @update:show="dataModal.show = $event" @modalClosed="handleModalClosed" />
+  </template>
 </template>
 
 <script>
@@ -10,16 +12,15 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import axios from 'axios';
 import ModalMap from './ModalMap.vue';
-import { useToast } from 'vue-toastification';
 import Loader from '../layouts/default/Loading.vue';
 import { useRouter } from 'vue-router';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     ModalMap,
     Loader,
   },
   setup() {
-    const toast = useToast();
     const router = useRouter();
     const data = reactive({
       mapData: {},
@@ -46,23 +47,10 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
-          }
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
         });
-
       setTimeout(() => {
         data.overlay = false;
       }, 1000);
@@ -152,7 +140,8 @@ export default {
 <style>
 #map {
   display: flex;
-  height: 100vh;
+  max-height: 85vh;
+  margin: auto;
 }
 
 #map button {

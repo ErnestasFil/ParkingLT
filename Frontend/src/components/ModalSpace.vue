@@ -4,7 +4,7 @@
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi vieta</b> </span>
+            <span class="text"> <span class="mdi mdi-map"></span> <b>Parkavimosi vieta</b> </span>
           </v-card-title>
         </v-toolbar>
         <v-card-text>
@@ -190,22 +190,22 @@ export default {
                       });
                     }
                   })
-                  .catch((error) => {});
+                  .catch((error) => {
+                    if (error.response && error.response.status === 422) {
+                      toast.error(error.response.data.time[0], {
+                        timeout: 10000,
+                      });
+                    } else {
+                      refresh.error403(error, router);
+                      refresh.error404(error, router);
+                      refresh.errorOther(error, router);
+                    }
+                  });
               });
-            } else if (error.response && error.response.status === 403) {
-              toast.error('Prieiga negalima!', {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
-            } else if (error.response && error.response.status === 404) {
-              toast.error(error.response.data.message, {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
             } else {
-              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                timeout: 10000,
-              });
+              refresh.error403(error, router);
+              refresh.error404(error, router);
+              refresh.errorOther(error, router);
             }
           });
       }

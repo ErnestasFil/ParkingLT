@@ -10,6 +10,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
+import refresh from '../plugins/refreshToken';
 export default {
   props: {
     zoneData: {
@@ -41,21 +42,9 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
-          }
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
         });
     });
     const initializeMap = () => {
@@ -145,12 +134,13 @@ export default {
 <style>
 #map {
   display: flex;
-  height: 100vh;
+  height: 90vh;
+  margin: auto;
 }
 
 #map button {
+  position: absolute;
   top: 10px;
   left: 10px;
-  background-color: white;
 }
 </style>

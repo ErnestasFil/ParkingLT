@@ -5,15 +5,15 @@
       <template v-if="!isLoading">
         <v-form @submit.prevent="update">
           <v-row no-gutters>
-            <v-col cols="9">
+            <v-col cols="12" xl="9">
               <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData" @updatePolygon="handleUpdatePolygon"></MapComponent> </v-sheet>
             </v-col>
 
-            <v-col>
+            <v-col cols="12" xl="3">
               <v-sheet class="pa-2 ma-2">
                 <v-toolbar>
                   <v-card-title>
-                    <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ zoneData.name }} </span>
+                    <span class="text"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ zoneData.name }} </span>
                   </v-card-title>
                 </v-toolbar>
                 <v-card-text>
@@ -159,21 +159,9 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
-          }
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
         });
       setTimeout(() => {
         isLoading.value = false;
@@ -225,22 +213,21 @@ export default {
                     router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  if (error.response && error.response.status === 422) {
+                    const info = error.response.data;
+                    Object.assign(errors, info);
+                  } else {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  }
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       updateData.loading = false;

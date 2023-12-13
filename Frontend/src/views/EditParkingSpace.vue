@@ -6,15 +6,15 @@
       <template v-if="!isLoading">
         <v-form @submit.prevent="update">
           <v-row no-gutters>
-            <v-col cols="9">
+            <v-col cols="12" xl="9">
               <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData" @updatePolygon="handleUpdatePolygon"></MapComponent> </v-sheet>
             </v-col>
 
-            <v-col>
+            <v-col cols="12" xl="3">
               <v-sheet class="pa-2 ma-2">
                 <v-toolbar>
                   <v-card-title>
-                    <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Stovėjimo vieta</b> - {{ zoneData.space.space_number }} </span>
+                    <span class="text"> <span class="mdi mdi-map"></span> <b>Stovėjimo vieta</b> - {{ zoneData.space.space_number }} </span>
                   </v-card-title>
                 </v-toolbar>
                 <v-card-text>
@@ -129,53 +129,46 @@ export default {
     const updateData = reactive({ loading: false, street: '', information: '', space_number: 0, invalid_place: 0, location_polygon: [] });
     const errors = {};
     const fetchData = async () => {
-      try {
-        await axios
-          .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-          })
-          .then((response) => {
-            if (response.status === 200) {
-              zoneData.zone = response.data;
-              axios
-                .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}`, {
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: '*/*',
-                  },
-                })
-                .then((data) => {
-                  if (data.status === 200) {
-                    zoneData.space = data.data;
-                    updateData.street = zoneData.space.street;
-                    updateData.information = zoneData.space.information;
-                    updateData.space_number = zoneData.space.space_number;
-                    updateData.invalid_place = zoneData.space.invalid_place;
-                    updateData.location_polygon = zoneData.space.location_polygon;
-                  }
-                });
-            }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 403) {
-          toast.error('Prieiga negalima!', {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else if (error.response && error.response.status === 404) {
-          toast.error(error.response.data.message, {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      }
+      await axios
+        .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            zoneData.zone = response.data;
+            axios
+              .get(`${process.env.APP_URL}/parking_zone/${zoneId.value}/parking_space/${spaceId.value}`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: '*/*',
+                },
+              })
+              .then((data) => {
+                if (data.status === 200) {
+                  zoneData.space = data.data;
+                  updateData.street = zoneData.space.street;
+                  updateData.information = zoneData.space.information;
+                  updateData.space_number = zoneData.space.space_number;
+                  updateData.invalid_place = zoneData.space.invalid_place;
+                  updateData.location_polygon = zoneData.space.location_polygon;
+                }
+              })
+              .catch((error) => {
+                refresh.error403(error, router);
+                refresh.error404(error, router);
+                refresh.errorOther(error, router);
+              });
+          }
+        })
+        .catch((error) => {
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
+        });
+
       setTimeout(() => {
         isLoading.value = false;
       }, 1000);
@@ -226,22 +219,21 @@ export default {
                     router.push({ name: 'ParkingSpace', params: { id: zoneId.value } });
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  if (error.response && error.response.status === 422) {
+                    const info = error.response.data;
+                    Object.assign(errors, info);
+                  } else {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  }
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       updateData.loading = false;

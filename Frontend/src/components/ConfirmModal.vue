@@ -3,7 +3,7 @@
     <v-card>
       <v-toolbar>
         <v-card-title>
-          <span class="text-h5">
+          <span class="text">
             <b>{{ title }}</b>
           </span>
         </v-card-title>

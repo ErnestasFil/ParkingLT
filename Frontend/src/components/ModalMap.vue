@@ -4,7 +4,7 @@
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ fullData.name }} </span>
+            <span class="text"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ fullData.name }} </span>
           </v-card-title>
         </v-toolbar>
         <v-card-text>

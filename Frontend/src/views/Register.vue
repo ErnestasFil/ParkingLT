@@ -33,37 +33,35 @@ export default {
     const errors = {};
     const router = useRouter();
     const register = async () => {
-      try {
-        data.loading = true;
-        Object.keys(errors).forEach((key) => delete errors[key]);
+      data.loading = true;
+      Object.keys(errors).forEach((key) => delete errors[key]);
 
-        await axios
-          .post(`${process.env.APP_URL}/register`, data, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-          })
-          .then((data) => {
-            if (data.status === 201) {
-              toast.success('Sveikiname prisiregistravus! Dabar galite prisijungti.', {
-                timeout: 10000,
-              });
-              router.push({ name: 'Login' });
-            }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          Object.assign(errors, info);
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      } finally {
-        data.loading = false;
-      }
+      await axios
+        .post(`${process.env.APP_URL}/register`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        })
+        .then((data) => {
+          if (data.status === 201) {
+            toast.success('Sveikiname prisiregistravus! Dabar galite prisijungti.', {
+              timeout: 10000,
+            });
+            router.push({ name: 'Login' });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            const info = error.response.data;
+            Object.assign(errors, info);
+          } else {
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
+          }
+        });
+      data.loading = false;
     };
     const onCountryUpdate = (countryIso) => {
       data.phone_country = countryIso;

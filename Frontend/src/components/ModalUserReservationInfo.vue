@@ -1,10 +1,10 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="data.opened" min-width="600" max-width="900" @keydown.esc="cancel">
+    <v-dialog v-model="data.opened" max-width="900" @keydown.esc="cancel">
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Rezervacijos informacija</b> </span>
+            <span class="text"> <span class="mdi mdi-map"></span> <b>Rezervacijos informacija</b> </span>
           </v-card-title>
         </v-toolbar>
         <template v-if="data.isLoading">
@@ -85,100 +85,86 @@ export default {
       data.spaceId = spaceId;
       data.userData = user;
       data.opened = true;
-      try {
-        axios
-          .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-          })
-          .then((parkingZone) => {
-            if (parkingZone.status === 200) {
-              fullData.zone = parkingZone.data;
-              axios
-                .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}`, {
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: '*/*',
-                  },
-                })
-                .then((parkingSpace) => {
-                  if (parkingSpace.status === 200) {
-                    fullData.space = parkingSpace.data;
-                    axios
-                      .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
-                        headers: {
-                          'Content-Type': 'application/json',
-                          Accept: '*/*',
-                          Authorization: `Bearer ${store.state.login.token}`,
-                        },
-                      })
-                      .then((reserv) => {
-                        if (reserv.status === 200) {
-                          fullData.reservation = reserv.data;
-                          fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
-                        }
-                      })
-                      .catch((error) => {
-                        if (error.response && error.response.status === 401) {
-                          refresh.refreshToken(router).then(() => {
-                            axios
-                              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  Accept: '*/*',
-                                  Authorization: `Bearer ${store.state.login.token}`,
-                                },
-                              })
-                              .then((reserv) => {
-                                if (reserv.status === 200) {
-                                  fullData.reservation = reserv.data;
-                                  fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
-                                }
-                              })
-                              .catch((error) => {});
-                          });
-                        } else if (error.response && error.response.status === 403) {
-                          toast.error('Prieiga negalima!', {
-                            timeout: 10000,
-                          });
-                          router.push({ name: 'Home' });
-                        } else if (error.response && error.response.status === 404) {
-                          toast.error(error.response.data.message, {
-                            timeout: 10000,
-                          });
-                          router.push({ name: 'Home' });
-                        } else {
-                          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                            timeout: 10000,
-                          });
-                        }
-                      });
-                  }
-                });
-            }
-          });
-        setTimeout(() => {
-          data.isLoading = false;
-        }, 1500);
-      } catch (error) {
-        if (error.response && error.response.status === 403) {
-          toast.error('Prieiga negalima!', {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else if (error.response && error.response.status === 404) {
-          toast.error(error.response.data.message, {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      }
+      axios
+        .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        })
+        .then((parkingZone) => {
+          if (parkingZone.status === 200) {
+            fullData.zone = parkingZone.data;
+            axios
+              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: '*/*',
+                },
+              })
+              .then((parkingSpace) => {
+                if (parkingSpace.status === 200) {
+                  fullData.space = parkingSpace.data;
+                  axios
+                    .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Accept: '*/*',
+                        Authorization: `Bearer ${store.state.login.token}`,
+                      },
+                    })
+                    .then((reserv) => {
+                      if (reserv.status === 200) {
+                        fullData.reservation = reserv.data;
+                        fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                      }
+                    })
+                    .catch((error) => {
+                      if (error.response && error.response.status === 401) {
+                        refresh.refreshToken(router).then(() => {
+                          axios
+                            .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                              headers: {
+                                'Content-Type': 'application/json',
+                                Accept: '*/*',
+                                Authorization: `Bearer ${store.state.login.token}`,
+                              },
+                            })
+                            .then((reserv) => {
+                              if (reserv.status === 200) {
+                                fullData.reservation = reserv.data;
+                                fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                              }
+                            })
+                            .catch((error) => {
+                              refresh.error403(error, router);
+                              refresh.error404(error, router);
+                              refresh.errorOther(error, router);
+                            });
+                        });
+                      } else {
+                        refresh.error403(error, router);
+                        refresh.error404(error, router);
+                        refresh.errorOther(error, router);
+                      }
+                    });
+                }
+              })
+              .catch((error) => {
+                refresh.error403(error, router);
+                refresh.error404(error, router);
+                refresh.errorOther(error, router);
+              });
+          }
+        })
+        .catch((error) => {
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
+        });
+      setTimeout(() => {
+        data.isLoading = false;
+      }, 1500);
       return new Promise((resolve, reject) => {
         data.resolve = resolve;
         data.reject = reject;

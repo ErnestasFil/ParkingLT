@@ -4,15 +4,15 @@
       <Loader v-if="isLoading" />
       <template v-if="!isLoading">
         <v-row no-gutters>
-          <v-col cols="9">
+          <v-col cols="12" xl="9">
             <v-sheet class="pa-2 ma-2"> <MapComponent :zoneData="zoneData" :spaceData="spaceData"></MapComponent> </v-sheet>
           </v-col>
 
-          <v-col>
+          <v-col cols="12" xl="3">
             <v-sheet class="pa-2 ma-2">
               <v-toolbar>
                 <v-card-title>
-                  <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ zoneData.name }} </span>
+                  <span class="text"><span class="mdi mdi-map"></span> <b>Parkavimosi zona</b> - {{ zoneData.name }}</span>
                 </v-card-title>
               </v-toolbar>
               <v-card-text>
@@ -54,15 +54,14 @@ import MapComponent from '../components/ParkingSpaceMap.vue';
 import store from '../plugins/store';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import { useToast } from 'vue-toastification';
 import Loader from '../layouts/default/Loading.vue';
+import refresh from '../plugins/refreshToken';
 export default {
   components: {
     MapComponent,
     Loader,
   },
   setup() {
-    const toast = useToast();
     const route = useRoute();
     const router = useRouter();
     const zoneId = ref(route.params.id);
@@ -98,40 +97,16 @@ export default {
                 spaceData.value = response.data;
               })
               .catch((error) => {
-                if (error.response && error.response.status === 403) {
-                  toast.error('Prieiga negalima!', {
-                    timeout: 10000,
-                  });
-                  router.push({ name: 'Home' });
-                } else if (error.response && error.response.status === 404) {
-                  toast.error(error.response.data.message, {
-                    timeout: 10000,
-                  });
-                  router.push({ name: 'Home' });
-                } else {
-                  toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                    timeout: 10000,
-                  });
-                }
+                refresh.error403(error, router);
+                refresh.error404(error, router);
+                refresh.errorOther(error, router);
               });
           }
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
-          }
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
         });
 
       setTimeout(() => {

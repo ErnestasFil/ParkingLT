@@ -1,10 +1,10 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="data.opened" min-width="600" max-width="900" @keydown.esc="cancel">
+    <v-dialog v-model="data.opened" max-width="900" @keydown.esc="cancel">
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Rezervacijos redagavimas</b> </span>
+            <span class="text"> <span class="mdi mdi-map"></span> <b>Rezervacijos redagavimas</b> </span>
           </v-card-title>
         </v-toolbar>
         <template v-if="data.isLoading">
@@ -12,7 +12,7 @@
         </template>
         <template v-else>
           <v-row no-gutters>
-            <v-col cols="6">
+            <v-col cols="12" xl="6">
               <v-sheet class="pa-2 ma-2"
                 ><v-card-text>
                   <v-alert border="start" variant="tonal" title="Parkavimo vietos informacija"> {{ fullData.space.information }} </v-alert>
@@ -56,7 +56,7 @@
               </v-sheet>
             </v-col>
 
-            <v-col cols="6">
+            <v-col cols="12" xl="6">
               <v-sheet class="pa-2 ma-2">
                 <v-card-text>
                   <v-alert border="start" variant="tonal" type="success" title="Laiko keitimas" class="mb-10 mx-lg-auto"> </v-alert>
@@ -129,105 +129,91 @@ export default {
       data.opened = true;
       timeSelect.price = 0;
       timeSelect.endTime = new Date();
-      try {
-        axios
-          .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-          })
-          .then((parkingZone) => {
-            if (parkingZone.status === 200) {
-              fullData.zone = parkingZone.data;
+      axios
+        .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        })
+        .then((parkingZone) => {
+          if (parkingZone.status === 200) {
+            fullData.zone = parkingZone.data;
+            axios
+              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}`, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: '*/*',
+                },
+              })
+              .then((parkingSpace) => {
+                if (parkingSpace.status === 200) {
+                  fullData.space = parkingSpace.data;
+                  axios
+                    .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Accept: '*/*',
+                        Authorization: `Bearer ${store.state.login.token}`,
+                      },
+                    })
+                    .then((reserv) => {
+                      if (reserv.status === 200) {
+                        fullData.reservation = reserv.data;
+                        timeSelect.endTime = fullData.reservation.date_until;
+                        fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                        generateTimeOptions(fullData.zone.paying_time);
+                      }
+                    })
+                    .catch((error) => {
+                      if (error.response && error.response.status === 401) {
+                        refresh.refreshToken(router).then(() => {
+                          axios
+                            .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
+                              headers: {
+                                'Content-Type': 'application/json',
+                                Accept: '*/*',
+                                Authorization: `Bearer ${store.state.login.token}`,
+                              },
+                            })
+                            .then((reserv) => {
+                              if (reserv.status === 200) {
+                                fullData.reservation = reserv.data;
+                                timeSelect.endTime = fullData.reservation.date_until;
+                                fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
+                                generateTimeOptions(fullData.zone.paying_time);
+                              }
+                            })
+                            .catch((error) => {
+                              refresh.error403(error, router);
+                              refresh.error404(error, router);
+                              refresh.errorOther(error, router);
+                            });
+                        });
+                      } else {
+                        refresh.error403(error, router);
+                        refresh.error404(error, router);
+                        refresh.errorOther(error, router);
+                      }
+                    });
+                }
+              })
+              .catch((error) => {
+                refresh.error403(error, router);
+                refresh.error404(error, router);
+                refresh.errorOther(error, router);
+              });
+          }
+        })
+        .catch((error) => {
+          refresh.error403(error, router);
+          refresh.error404(error, router);
+          refresh.errorOther(error, router);
+        });
+      setTimeout(() => {
+        data.isLoading = false;
+      }, 1500);
 
-              axios
-                .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}`, {
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Accept: '*/*',
-                  },
-                })
-                .then((parkingSpace) => {
-                  if (parkingSpace.status === 200) {
-                    fullData.space = parkingSpace.data;
-                    axios
-                      .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
-                        headers: {
-                          'Content-Type': 'application/json',
-                          Accept: '*/*',
-                          Authorization: `Bearer ${store.state.login.token}`,
-                        },
-                      })
-                      .then((reserv) => {
-                        if (reserv.status === 200) {
-                          fullData.reservation = reserv.data;
-                          timeSelect.endTime = fullData.reservation.date_until;
-                          fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
-                          generateTimeOptions(fullData.zone.paying_time);
-                        }
-                      })
-                      .catch((error) => {
-                        if (error.response && error.response.status === 401) {
-                          refresh.refreshToken(router).then(() => {
-                            axios
-                              .get(`${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`, {
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  Accept: '*/*',
-                                  Authorization: `Bearer ${store.state.login.token}`,
-                                },
-                              })
-                              .then((reserv) => {
-                                if (reserv.status === 200) {
-                                  fullData.reservation = reserv.data;
-                                  timeSelect.endTime = fullData.reservation.date_until;
-                                  fullData.reservation.price = Number(fullData.reservation.price).toFixed(2);
-                                  generateTimeOptions(fullData.zone.paying_time);
-                                }
-                              })
-                              .catch((error) => {});
-                          });
-                        } else if (error.response && error.response.status === 403) {
-                          toast.error('Prieiga negalima!', {
-                            timeout: 10000,
-                          });
-                          router.push({ name: 'Home' });
-                        } else if (error.response && error.response.status === 404) {
-                          toast.error(error.response.data.message, {
-                            timeout: 10000,
-                          });
-                          router.push({ name: 'Home' });
-                        } else {
-                          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                            timeout: 10000,
-                          });
-                        }
-                      });
-                  }
-                });
-            }
-          });
-        setTimeout(() => {
-          data.isLoading = false;
-        }, 1500);
-      } catch (error) {
-        if (error.response && error.response.status === 403) {
-          toast.error('Prieiga negalima!', {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else if (error.response && error.response.status === 404) {
-          toast.error(error.response.data.message, {
-            timeout: 10000,
-          });
-          router.push({ name: 'Home' });
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      }
       return new Promise((resolve, reject) => {
         data.resolve = resolve;
         data.reject = reject;
@@ -242,7 +228,6 @@ export default {
       const updatedData = reactive({ price: 0, until: null });
       const [selectedHours, selectedMinutes] = timeSelect.selectedTime.split(':').map(Number);
       const time = selectedHours * 60 + selectedMinutes;
-
       await axios
         .patch(
           `${process.env.APP_URL}/parking_zone/${data.zoneId}/parking_space/${data.spaceId}/reservation/${data.reservationId}`,
@@ -296,22 +281,22 @@ export default {
                     data.opened = false;
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  if (error.response && error.response.status === 422) {
+                    toast.error(error.response.data.time[0], {
+                      timeout: 10000,
+                    });
+                  } else {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  }
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
           data.resolve(false);
           data.opened = false;

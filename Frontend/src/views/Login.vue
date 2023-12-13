@@ -19,54 +19,58 @@ import store from '../plugins/store';
 import VueJwtDecode from 'vue-jwt-decode';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import refresh from '../plugins/refreshToken';
 export default {
   setup() {
     const toast = useToast();
     const data = reactive({ loading: false, email: '', password: '' });
     const errors = {};
     const router = useRouter();
-
     const login = async () => {
-      try {
-        Object.keys(errors).forEach((key) => delete errors[key]);
-        data.loading = true;
-        await axios
-          .post(`${process.env.APP_URL}/login`, data, {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: '*/*',
-            },
-          })
-          .then((data) => {
-            if (data.status === 200) {
-              const info = data.data;
-              const decoded = VueJwtDecode.decode(info.access_token);
-              const token = {
-                token: info.access_token,
-                exp: decoded.exp,
-                sub: decoded.sub,
-                email: decoded.email,
-                role: decoded.role,
-              };
-              store.commit('jwt', token);
-              toast.success(info.message, {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
-            }
-          });
-      } catch (error) {
-        if (error.response && error.response.status === 422) {
-          const info = error.response.data;
-          Object.assign(errors, info);
-        } else {
-          toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-            timeout: 10000,
-          });
-        }
-      } finally {
-        data.loading = false;
-      }
+      Object.keys(errors).forEach((key) => delete errors[key]);
+      data.loading = true;
+      await axios
+        .post(`${process.env.APP_URL}/login`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+        })
+        .then((data) => {
+          if (data.status === 200) {
+            const info = data.data;
+            const decoded = VueJwtDecode.decode(info.access_token);
+            const token = {
+              token: info.access_token,
+              exp: decoded.exp,
+              sub: decoded.sub,
+              email: decoded.email,
+              role: decoded.role,
+            };
+            store.commit('jwt', token);
+            toast.success(info.message, {
+              timeout: 10000,
+            });
+            router.push({ name: 'Home' });
+          }
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 422) {
+            const info = error.response.data;
+            Object.assign(errors, info);
+          } else if (error.response && error.response.status === 401) {
+            const info = error.response.data;
+            toast.error(info.message, {
+              timeout: 10000,
+            });
+            data.password = '';
+          } else {
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
+          }
+        });
+      data.loading = false;
     };
 
     return {

@@ -1,14 +1,14 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="opened" min-width="600" max-width="900" @keydown.esc="cancel">
+    <v-dialog v-model="opened" max-width="900" @keydown.esc="cancel">
       <v-card>
         <v-toolbar>
           <v-card-title>
-            <span class="text-h5"> <span class="mdi mdi-map"></span> <b>Rezervacija</b> </span>
+            <span class="text"> <span class="mdi mdi-map"></span> <b>Rezervacija</b> </span>
           </v-card-title>
         </v-toolbar>
         <v-row no-gutters>
-          <v-col cols="6">
+          <v-col cols="12" xl="6">
             <v-sheet class="pa-2 ma-2"
               ><v-card-text>
                 <v-alert border="start" variant="tonal" title="Parkavimo vietos informacija"> {{ space.information }} </v-alert>
@@ -49,7 +49,7 @@
             </v-sheet>
           </v-col>
 
-          <v-col cols="6">
+          <v-col cols="12" xl="6">
             <v-sheet class="pa-2 ma-2">
               <v-card-text>
                 <v-alert border="start" variant="tonal" type="success" title="Rezervacijos pridėjimas" class="mb-10 mx-lg-auto"> </v-alert>

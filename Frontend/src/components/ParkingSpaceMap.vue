@@ -1,7 +1,9 @@
 <template>
   <div id="map"></div>
-  <ModalMap :show="dataModal.show" :fullData="dataModal.fullData" :zoneData="dataModal.zoneData" :spaceFree="dataModal.spaceFree" @update:show="dataModal.show = $event" @modalClosed="handleModalClosed" @deleteSpace="removeSpace" />
-  <ConfirmModal ref="confirmModalRef" />
+  <template>
+    <ModalMap :show="dataModal.show" :fullData="dataModal.fullData" :zoneData="dataModal.zoneData" :spaceFree="dataModal.spaceFree" @update:show="dataModal.show = $event" @modalClosed="handleModalClosed" @deleteSpace="removeSpace" />
+    <ConfirmModal ref="confirmModalRef" />
+  </template>
 </template>
 
 <script>
@@ -208,22 +210,16 @@ export default {
                     dataModal.spaceFree = isParkingSpaceFree(resData.data);
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  refresh.error403(error, router);
+                  refresh.error404(error, router);
+                  refresh.errorOther(error, router);
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
     };
@@ -295,22 +291,16 @@ export default {
                       map.removeSource(sourceId);
                     }
                   })
-                  .catch((error) => {});
+                  .catch((error) => {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  });
               });
-            } else if (error.response && error.response.status === 403) {
-              toast.error('Prieiga negalima!', {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
-            } else if (error.response && error.response.status === 404) {
-              toast.error(error.response.data.message, {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
             } else {
-              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                timeout: 10000,
-              });
+              refresh.error403(error, router);
+              refresh.error404(error, router);
+              refresh.errorOther(error, router);
             }
           });
       }
@@ -333,7 +323,8 @@ export default {
 <style>
 #map {
   display: flex;
-  height: 100vh;
+  height: 90vh;
+  margin: auto;
 }
 
 #map button {

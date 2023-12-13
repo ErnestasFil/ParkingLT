@@ -146,22 +146,16 @@ export default {
                     });
                   }
                 })
-                .catch((error) => {});
+                .catch((error) => {
+                  refresh.error403(error, router);
+                  refresh.error404(error, router);
+                  refresh.errorOther(error, router);
+                });
             });
-          } else if (error.response && error.response.status === 403) {
-            toast.error('Prieiga negalima!', {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
-          } else if (error.response && error.response.status === 404) {
-            toast.error(error.response.data.message, {
-              timeout: 10000,
-            });
-            router.push({ name: 'Home' });
           } else {
-            toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-              timeout: 10000,
-            });
+            refresh.error403(error, router);
+            refresh.error404(error, router);
+            refresh.errorOther(error, router);
           }
         });
       setTimeout(() => {
@@ -218,22 +212,16 @@ export default {
                       data.users = data.users.filter((user) => user.id !== userId);
                     }
                   })
-                  .catch((error) => {});
+                  .catch((error) => {
+                    refresh.error403(error, router);
+                    refresh.error404(error, router);
+                    refresh.errorOther(error, router);
+                  });
               });
-            } else if (error.response && error.response.status === 403) {
-              toast.error('Prieiga negalima!', {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
-            } else if (error.response && error.response.status === 404) {
-              toast.error(error.response.data.message, {
-                timeout: 10000,
-              });
-              router.push({ name: 'Home' });
             } else {
-              toast.error(error.response ? error.response.data.message : 'Nenumatyta klaida', {
-                timeout: 10000,
-              });
+              refresh.error403(error, router);
+              refresh.error404(error, router);
+              refresh.errorOther(error, router);
             }
           });
       }

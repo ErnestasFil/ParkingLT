@@ -24,7 +24,7 @@ app.use(Toast, {
   transition: 'Vue-Toastification__fade',
   maxToasts: 2,
   newestOnTop: true,
-  position: 'bottom-center',
+  position: 'top-center',
   closeOnClick: false,
   pauseOnFocusLoss: false,
   pauseOnHover: false,
