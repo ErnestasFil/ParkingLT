@@ -70,6 +70,10 @@ const authService = {
         timeout: 10000,
       });
       router.push({ name: 'Home' });
+    } else {
+      toast.error('Serverio klaida', {
+        timeout: 10000,
+      });
     }
   },
 };
