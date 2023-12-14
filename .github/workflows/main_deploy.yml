@@ -3,7 +3,7 @@ name: Build and deploy Laravel app to Azure Web App - parkinglt
 on:
   push:
     branches:
-      - main
+      - Backend
   workflow_dispatch:
 
 jobs:
