@@ -55,177 +55,177 @@ Sistema bei visos sistemos dalys bus talpinamos „Azure“ serveryje. Interneti
 
 ## 3. Naudotojo sąsaja
 
-| ![Pagrindinis puslapis (naudotojas neprisijungęs)](Documents/Pagrindinis_puslapis_neprisijungus.PNG) |
+| ![Pagrindinis puslapis (naudotojas neprisijungęs)](Documents/Pagrindinis_puslapis_neprisijungus.png) |
 |:--:|
 | *Pagrindinis puslapis (naudotojas neprisijungęs)* |
 <br>
 
-| ![Pagrindinis puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Pagrindinis_puslapis_prisijungus_admin.PNG) |
+| ![Pagrindinis puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Pagrindinis_puslapis_prisijungus_admin.png) |
 |:--:|
 | *Pagrindinis puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Pagrindinis puslapis (naudotojas prisijungęs kaip vartotojas)](Documents/Pagrindinis_puslapis_prisijungus_user.PNG) |
+| ![Pagrindinis puslapis (naudotojas prisijungęs kaip vartotojas)](Documents/Pagrindinis_puslapis_prisijungus_user.png) |
 |:--:|
 | *Pagrindinis puslapis (naudotojas prisijungęs kaip vartotojas)* |
 <br>
 
-| ![Prisijungimo puslapis](Documents/Prisijungimas.PNG) |
+| ![Prisijungimo puslapis](Documents/Prisijungimas.png) |
 |:--:|
 | *Prisijungimo puslapis* |
 <br>
 
-| ![Registracijos puslapis](Documents/Registracija.PNG) |
+| ![Registracijos puslapis](Documents/Registracija.png) |
 |:--:|
 | *Registracijos puslapis* |
 <br>
 
-| ![Prisijungusio naudotojo informacijos puslapis](Documents/Vartotojo_profilio_informacija.PNG) |
+| ![Prisijungusio naudotojo informacijos puslapis](Documents/Vartotojo_profilio_informacija.png) |
 |:--:|
 | *Prisijungusio naudotojo informacijos puslapis* |
 <br>
 
-| ![Prisijungusio naudotojo informacijos redagavimo modalas](Documents/Vartotojo_profilio_redagavimas.PNG) |
+| ![Prisijungusio naudotojo informacijos redagavimo modalas](Documents/Vartotojo_profilio_redagavimas.png) |
 |:--:|
 | *Prisijungusio naudotojo informacijos redagavimo modalas* |
 <br>
 
-| ![Prisijungusio naudotojo paskyros šalinimo modalas](Documents/Vartotojo_profilio_salinimas.PNG) |
+| ![Prisijungusio naudotojo paskyros šalinimo modalas](Documents/Vartotojo_profilio_salinimas.png) |
 |:--:|
 | *Prisijungusio naudotojo paskyros šalinimo modalas* |
 <br>
 
-| ![Parkavimo zonos informacijos modalas](Documents/Parkavimo_zonos_informacija.PNG) |
+| ![Parkavimo zonos informacijos modalas](Documents/Parkavimo_zonos_informacija.png) |
 |:--:|
 | *Parkavimo zonos informacijos modalas* |
 <br>
 
-| ![Parkavimo zonų informacija puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_zonu_informacija_ne_admin.PNG) |
+| ![Parkavimo zonų informacija puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_zonu_informacija_ne_admin.png) |
 |:--:|
 | *Parkavimo zonų informacija puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)* |
 <br>
 
-| ![Parkavimo zonų informacijos puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonu_informacija_admin.PNG) |
+| ![Parkavimo zonų informacijos puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonu_informacija_admin.png) |
 |:--:|
 | *Parkavimo zonų informacija puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo zonos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_salinimas.PNG) |
+| ![Parkavimo zonos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_salinimas.png) |
 |:--:|
 | *Parkavimo zonos šalinimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo zonos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_informacijos_redagavimas.PNG) |
+| ![Parkavimo zonos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_informacijos_redagavimas.png) |
 |:--:|
 | *Parkavimo zonos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo zonos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_pridejimas.PNG) |
+| ![Parkavimo zonos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_zonos_pridejimas.png) |
 |:--:|
 | *Parkavimo zonos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo vietų informacijos puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_vietos_ne_admin.PNG) |
+| ![Parkavimo vietų informacijos puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_vietos_ne_admin.png) |
 |:--:|
 | *Parkavimo vietų informacijos puslapis (naudotojas neprisijungęs arba naudotojas prisijungęs kaip vartotojas)* |
 <br>
 
-| ![Parkavimo vietų informacijos puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_admin.PNG) |
+| ![Parkavimo vietų informacijos puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_admin.png) |
 |:--:|
 | *Parkavimo vietų informacijos puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)](Documents/Parkavimo_vietos_informacija_neprisijungus.PNG) |
+| ![Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)](Documents/Parkavimo_vietos_informacija_neprisijungus.png) |
 |:--:|
 | *Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)* |
 <br>
 
-| ![Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)](Documents/Parkavimo_vietos_informacija_neprisijungus.PNG) |
+| ![Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)](Documents/Parkavimo_vietos_informacija_neprisijungus.png) |
 |:--:|
 | *Parkavimo vietos informacijos modalas (naudotojas neprisijungęs)* |
 <br>
 
-| ![Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_vietos_informacija_user.PNG) |
+| ![Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip vartotojas)](Documents/Parkavimo_vietos_informacija_user.png) |
 |:--:|
 | *Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip vartotojas)* |
 <br>
 
-| ![Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_informacija_admin.PNG) |
+| ![Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_informacija_admin.png) |
 |:--:|
 | *Parkavimo vietos informacijos modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo vietos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_salinimas.PNG) |
+| ![Parkavimo vietos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_salinimas.png) |
 |:--:|
 | *Parkavimo vietos šalinimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo vietos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_redagavimas.PNG) |
+| ![Parkavimo vietos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_redagavimas.png) |
 |:--:|
 | *Parkavimo vietos redagavimo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Parkavimo vietos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_pridejimas.PNG) |
+| ![Parkavimo vietos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Parkavimo_vietos_pridejimas.png) |
 |:--:|
 | *Parkavimo vietos pridėjimo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Rezervacijos pridėjimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_pridejimas.PNG) |
+| ![Rezervacijos pridėjimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_pridejimas.png) |
 |:--:|
 | *Rezervacijos pridėjimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)* |
 <br>
 
-| ![Rezervacijų sąrašas stovėjimo vietoje puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervaciju_sarasas_stovejimo_vietoje.PNG) |
+| ![Rezervacijų sąrašas stovėjimo vietoje puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervaciju_sarasas_stovejimo_vietoje.png) |
 |:--:|
 | *Rezervacijų sąrašas stovėjimo vietoje puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)* |
 <br>
 
-| ![Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervaciju_sarasas.PNG) |
+| ![Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervaciju_sarasas.png) |
 |:--:|
 | *Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip vartotojas arba administratorius)* |
 <br>
 
-| ![Rezervacijos informacijos modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_informacija.PNG) |
+| ![Rezervacijos informacijos modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_informacija.png) |
 |:--:|
 | *Rezervacijos informacijos modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)* |
 <br>
 
-| ![Rezervacijos informacijos redagavimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_redagavimas.PNG) |
+| ![Rezervacijos informacijos redagavimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)](Documents/Rezervacijos_redagavimas.png) |
 |:--:|
 | *Rezervacijos informacijos redagavimo modalas (naudotojas prisijungęs kaip vartotojas arba administratorius)* |
 <br>
 
-| ![Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Rezervaciju_sarasas_admin.PNG) |
+| ![Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Rezervaciju_sarasas_admin.png) |
 |:--:|
 | *Rezervacijų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Rezervacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_redagavimas_admin.PNG) |
+| ![Rezervacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_redagavimas_admin.png) |
 |:--:|
 | *Rezervacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Rezervacijos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_salinimas.PNG) |
+| ![Rezervacijos šalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_salinimas.png) |
 |:--:|
 | *Rezervacijos šalinimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Rezervacijos informacijos modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_informacija_admin.PNG) |
+| ![Rezervacijos informacijos modalas (naudotojas prisijungęs kaip administratorius)](Documents/Rezervacijos_informacija_admin.png) |
 |:--:|
 | *Rezervacijos informacijos modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Naudotojų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Vartotoju_sarasas.PNG) |
+| ![Naudotojų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)](Documents/Vartotoju_sarasas.png) |
 |:--:|
 | *Naudotojų sąrašo puslapis (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Naudotojo informacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Vartotojo_profilio_redagavimas_admin.PNG) |
+| ![Naudotojo informacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Vartotojo_profilio_redagavimas_admin.png) |
 |:--:|
 | *Naudotojo informacijos redagavimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
 
-| ![Naudotojo pašalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Vartotojo_profilio_salinimas_admin.PNG) |
+| ![Naudotojo pašalinimo modalas (naudotojas prisijungęs kaip administratorius)](Documents/Vartotojo_profilio_salinimas_admin.png) |
 |:--:|
 | *Naudotojo pašalinimo modalas (naudotojas prisijungęs kaip administratorius)* |
 <br>
