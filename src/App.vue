@@ -145,6 +145,8 @@ export default {
                     toast.error('Prašome prisijungti iš naujo.', {
                       timeout: 10000,
                     });
+                    store.commit('updateUserData', null);
+                    router.push({ name: 'Home' });
                   } else {
                     refresh.errorOther(error, router);
                   }
